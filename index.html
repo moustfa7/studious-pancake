@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مين هيكسب؟</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#161311;
+    --page-bg:#141210;
+    --panel-bg:#1d1a16;
+    --panel-border:#3a352c;
+    --paper:#F7F3E9;
+    --muted-onpage:#b8ae9c;
+    --muted-oncard:#6b6459;
+    --card:#FFFFFF;
+    --card-tint:#F1ECDE;
+    --red:#D6291B;
+    --red-dark:#9E1B10;
+    --red-bright:#FF5C46;
+    --gold:#E8B84B;
+    --gold-dark:#8a6a1c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Cairo',sans-serif;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,0.05), transparent 40%),
+      radial-gradient(circle at 88% 82%, rgba(214,41,27,0.14), transparent 45%),
+      var(--page-bg);
+    color:var(--paper);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px 16px;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:3px 3px;
+    pointer-events:none;
+    z-index:0;
+  }
+  #app{ width:100%; max-width:760px; position:relative; z-index:1; }
+
+  /* ---------- mute toggle ---------- */
+  #muteBtn{
+    position:fixed; top:16px; left:16px; z-index:50;
+    width:42px; height:42px; border-radius:50%;
+    background:rgba(255,255,255,0.06); border:2px solid var(--panel-border);
+    color:var(--paper); font-size:18px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .eyebrow{
+    font-family:'Cairo',sans-serif;
+    font-weight:800;
+    font-size:13px;
+    letter-spacing:.5px;
+    color:var(--gold);
+    text-align:center;
+    margin-bottom:6px;
+  }
+  .display-title{
+    font-family:'Lalezar',sans-serif;
+    font-size:44px;
+    line-height:1.15;
+    text-align:center;
+    color:var(--paper);
+    text-shadow:0 3px 0 rgba(0,0,0,0.5);
+  }
+  .display-title .accent{ color:var(--red-bright); }
+  .subtitle{
+    text-align:center;
+    color:var(--muted-onpage);
+    font-size:15px;
+    font-weight:600;
+    margin-top:8px;
+    margin-bottom:26px;
+  }
+
+  @keyframes popIn {
+    0%{ transform:scale(.94) translateY(8px); opacity:0; }
+    100%{ transform:scale(1) translateY(0); opacity:1; }
+  }
+
+  /* ---------- dark panel (setup screen host) ---------- */
+  .panel{
+    background:var(--panel-bg);
+    border:2px solid var(--panel-border);
+    border-radius:22px;
+    padding:26px 22px;
+    animation:popIn .3s cubic-bezier(.2,.9,.3,1.15);
+  }
+
+  /* ---------- stamp card (in-game, white "physical card" look) ---------- */
+  .stamp{
+    background:var(--card);
+    color:var(--ink);
+    border:3px solid var(--ink);
+    border-radius:22px;
+    position:relative;
+    overflow:hidden;
+    padding:28px 22px;
+    box-shadow:0 18px 0 -8px rgba(0,0,0,0.35), 0 26px 44px rgba(0,0,0,0.5);
+    animation:popIn .28s cubic-bezier(.2,.9,.3,1.2);
+  }
+  .stamp::after{
+    content:"";
+    position:absolute; inset:0; pointer-events:none;
+    background-image:radial-gradient(rgba(22,19,17,0.05) 1px, transparent 1px);
+    background-size:5px 5px;
+  }
+  .stamp .arc-deco{ position:absolute; inset:0; pointer-events:none; opacity:.5; }
+  .stamp .corner-star{ position:absolute; width:22px; height:22px; opacity:.92; z-index:2; }
+  .stamp .corner-star.tl{ top:14px; left:14px; }
+  .stamp .corner-star.tr{ top:14px; right:14px; }
+  .stamp .corner-star.bl{ bottom:14px; left:14px; }
+  .stamp .corner-star.br{ bottom:14px; right:14px; }
+  .stamp-inner{ position:relative; z-index:1; }
+
+  .badge-label{
+    font-family:'Cairo',sans-serif;
+    font-weight:800;
+    font-size:14px;
+    text-align:center;
+    color:var(--muted-oncard);
+    letter-spacing:.5px;
+    margin-bottom:4px;
+  }
+  .badge-label.red{ color:var(--red); }
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:block;
+    width:100%;
+    font-family:'Cairo',sans-serif;
+    font-weight:800;
+    font-size:17px;
+    padding:16px 18px;
+    border-radius:14px;
+    border:3px solid transparent;
+    cursor:pointer;
+    text-align:center;
+    transition:transform .08s ease, filter .1s ease;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn:hover{ filter:brightness(1.05); }
+  .btn[disabled]{ opacity:.4; cursor:not-allowed; }
+
+  /* on the white stamp card */
+  .btn.on-card-primary{ background:var(--red); color:#fff; border-color:var(--red-dark); }
+  .btn.on-card-outline{ background:transparent; color:var(--ink); border-color:var(--ink); }
+  .btn.on-card-muted{ background:transparent; color:var(--muted-oncard); border-color:#d8d2c3; font-size:14px; padding:11px 14px; }
+
+  /* on the dark panel / page */
+  .btn.on-dark-primary{ background:var(--red); color:#fff; border-color:var(--red-dark); }
+  .btn.on-dark-outline{ background:rgba(255,255,255,0.03); color:var(--paper); border-color:var(--panel-border); }
+
+  .btn-row{ display:flex; gap:10px; }
+  .btn-row .btn{ flex:1; }
+
+  /* ---------- setup screen (inside .panel, dark) ---------- */
+  .mode-row{ display:flex; gap:10px; margin-bottom:18px; }
+  .mode-btn{
+    flex:1; padding:16px 10px; border-radius:14px; border:2px solid var(--panel-border);
+    background:rgba(255,255,255,0.03); color:var(--paper); cursor:pointer;
+    font-family:'Cairo',sans-serif; font-weight:800; font-size:15px; text-align:center;
+    transition:border-color .15s, background .15s;
+  }
+  .mode-btn.active{ border-color:var(--red); background:rgba(214,41,27,0.2); color:#fff; }
+
+  .field-label{ font-weight:800; font-size:13px; color:var(--muted-onpage); margin:16px 0 8px; }
+  .team-input{
+    width:100%; padding:13px 14px; border-radius:12px; border:2px solid var(--panel-border);
+    background:rgba(255,255,255,0.05); color:var(--paper); font-family:'Cairo',sans-serif;
+    font-weight:700; font-size:15px; margin-bottom:10px;
+  }
+  .team-input::placeholder{ color:#736c5e; }
+  .team-input:focus{ outline:none; border-color:var(--gold); }
+  .team-count-row{ display:flex; align-items:center; justify-content:center; gap:20px; margin-bottom:16px; }
+  .count-btn{
+    width:42px; height:42px; border-radius:50%; border:2px solid var(--paper);
+    background:rgba(255,255,255,0.04); color:var(--paper); font-size:20px; font-weight:800; cursor:pointer;
+  }
+  .count-val{ font-family:'Lalezar',sans-serif; font-size:32px; min-width:40px; text-align:center; color:var(--gold); }
+  .rounds-row{ display:flex; gap:8px; justify-content:center; margin-bottom:6px; flex-wrap:wrap; }
+  .round-chip{
+    padding:10px 16px; border-radius:10px; border:2px solid var(--panel-border); background:transparent;
+    color:var(--paper); font-weight:800; cursor:pointer; font-family:'Cairo',sans-serif;
+  }
+  .round-chip.active{ border-color:var(--gold); background:rgba(232,184,75,0.15); color:var(--gold); }
+
+  /* ---------- play screen chrome (on dark page) ---------- */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:16px; font-weight:800; font-size:13px; color:var(--muted-onpage);
+  }
+  .scoreboard{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .score-pill{
+    flex:1; min-width:90px; background:rgba(255,255,255,0.04); border:2px solid var(--panel-border);
+    border-radius:12px; padding:9px 10px; text-align:center; transition:border-color .2s, background .2s;
+  }
+  .score-pill.turn{ border-color:var(--red); background:rgba(214,41,27,0.16); }
+  .score-pill .nm{ font-size:12px; font-weight:700; color:var(--muted-onpage); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .score-pill.turn .nm{ color:#fff; }
+  .score-pill .sc{ font-family:'Lalezar',sans-serif; font-size:24px; color:var(--gold); }
+
+  .turn-line{ text-align:center; font-weight:700; color:var(--muted-onpage); margin-bottom:18px; font-size:14px; }
+  .turn-line b{ color:#fff; }
+
+  /* ---------- card content ---------- */
+  .word-display{
+    font-family:'Lalezar',sans-serif; font-size:44px; text-align:center; line-height:1.2;
+    letter-spacing:1px; margin:14px 0 6px; color:var(--ink);
+  }
+  .word-display.reversed{ letter-spacing:6px; font-size:36px; direction:ltr; unicode-bidi:bidi-override; color:var(--red-dark); }
+  .clue-box{
+    background:var(--card-tint); border:2px dashed #c3b99f; border-radius:14px; padding:18px;
+    font-size:19px; font-weight:700; text-align:center; margin:14px 0; min-height:64px;
+    display:flex; align-items:center; justify-content:center; color:var(--ink);
+  }
+  .points-badge{
+    font-family:'Lalezar',sans-serif; background:var(--red); color:#fff; border-radius:50%;
+    width:58px; height:58px; display:flex; align-items:center; justify-content:center;
+    font-size:26px; margin:0 auto 12px; border:3px solid var(--red-dark);
+  }
+  .timer-wrap{ margin:10px 0 16px; }
+  .timer-track{ background:#e9e3d4; border-radius:999px; height:14px; overflow:hidden; border:2px solid var(--ink); }
+  .timer-fill{ height:100%; background:var(--red); transition:width 1s linear; }
+  .timer-num{ text-align:center; font-family:'Lalezar',sans-serif; font-size:30px; margin-top:6px; color:var(--ink); }
+  @keyframes pulseRed{ 0%,100%{ color:var(--ink); } 50%{ color:var(--red); } }
+  .timer-num.urgent{ animation:pulseRed .5s infinite; }
+
+  .hint-progress{ display:flex; gap:6px; justify-content:center; margin-bottom:14px; }
+  .hint-dot{ width:10px; height:10px; border-radius:50%; background:#d8d2c3; border:2px solid var(--ink); }
+  .hint-dot.on{ background:var(--red); }
+
+  .instr{ text-align:center; color:var(--muted-oncard); font-weight:700; font-size:14px; margin-bottom:6px; }
+  .ready-mark{ text-align:center; font-family:'Lalezar',sans-serif; font-size:70px; margin:14px 0; color:var(--ink); animation:breathe 1.6s ease-in-out infinite; }
+  @keyframes breathe{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+
+  /* ---------- results overlay ---------- */
+  .result-title{ font-family:'Lalezar',sans-serif; font-size:32px; text-align:center; margin-bottom:6px; color:var(--ink); }
+  .result-sub{ text-align:center; font-weight:700; color:var(--muted-oncard); margin-bottom:18px; }
+  .answer-reveal{ text-align:center; font-family:'Lalezar',sans-serif; font-size:30px; color:var(--red); margin-bottom:18px; }
+
+  /* ---------- leaderboard ---------- */
+  .lb-row{
+    display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+    border:2px solid var(--ink); border-radius:14px; margin-bottom:10px; background:#fff;
+  }
+  .lb-row.winner{ background:var(--gold); border-color:var(--gold-dark); }
+  .lb-rank{ font-family:'Lalezar',sans-serif; font-size:22px; width:34px; color:var(--ink); }
+  .lb-name{ flex:1; font-weight:800; font-size:16px; color:var(--ink); }
+  .lb-score{ font-family:'Lalezar',sans-serif; font-size:24px; color:var(--red); }
+
+  .footer-note{ text-align:center; color:#6f6a5e; font-size:12px; margin-top:20px; font-weight:600; }
+
+  /* ---------- trivia options ---------- */
+  .options-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .opt-btn{ font-size:14px; padding:14px 8px; }
+
+  /* ---------- drawing canvas ---------- */
+  #drawCanvas{
+    display:block; width:100%; height:260px; background:#fff;
+    border:2px solid var(--ink); border-radius:14px; touch-action:none; margin:6px 0 10px;
+  }
+  .clear-row{ text-align:center; margin-bottom:10px; }
+  .clear-btn{
+    display:inline-block; width:auto; padding:8px 18px; font-size:13px;
+  }
+
+  /* ---------- confetti ---------- */
+  #confettiLayer{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:40; }
+  .confetti-piece{
+    position:absolute; top:-20px; width:9px; height:14px; opacity:.9;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(110vh) rotate(540deg); opacity:0.9; }
+  }
+
+  @media (max-width:480px){
+    .display-title{ font-size:32px; }
+    .word-display{ font-size:32px; }
+    .word-display.reversed{ font-size:26px; letter-spacing:4px; }
+  }
+</style>
+</head>
+<body>
+<button id="muteBtn" onclick="toggleMute()">🔊</button>
+<div id="confettiLayer"></div>
+<div id="app"></div>
+
+<script>
+/* ======================= SOUND FX (Web Audio, no files needed) ======================= */
+const SFX = (function(){
+  let ctx=null, muted=false;
+  function ensure(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended'){ ctx.resume(); }
+  }
+  function tone(freq, start, dur, type, vol){
+    if(muted) return;
+    try{
+      ensure();
+      const t0 = ctx.currentTime+start;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type=type||'sine'; osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.linearRampToValueAtTime(vol||0.15, t0+0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(t0); osc.stop(t0+dur+0.03);
+    }catch(e){}
+  }
+  return {
+    toggleMute(){ muted=!muted; return muted; },
+    click(){ tone(500,0,0.06,'square',0.09); },
+    next(){ tone(660,0,0.07,'triangle',0.12); },
+    correct(){ tone(523,0,0.12,'triangle',0.18); tone(659,0.09,0.12,'triangle',0.18); tone(784,0.18,0.24,'triangle',0.2); },
+    fail(){ tone(220,0,0.16,'sawtooth',0.14); tone(150,0.13,0.3,'sawtooth',0.14); },
+    tick(){ tone(880,0,0.05,'square',0.08); },
+    start(){ tone(392,0,0.08,'sine',0.12); tone(523,0.07,0.14,'sine',0.14); },
+    fanfare(){ [523,659,784,1046,1318].forEach((f,i)=> tone(f, i*0.13, 0.32,'triangle',0.2)); }
+  };
+})();
+function toggleMute(){
+  const m = SFX.toggleMute();
+  document.getElementById('muteBtn').textContent = m ? '🔇' : '🔊';
+}
+
+/* ======================= CONFETTI ======================= */
+function burstConfetti(){
+  const colors = ['#D6291B','#E8B84B','#FBF8F2','#9E1B10'];
+  const layer = document.getElementById('confettiLayer');
+  layer.innerHTML='';
+  for(let i=0;i<40;i++){
+    const el = document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left = (Math.random()*100)+'vw';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.animationDuration = (2.2 + Math.random()*1.6)+'s';
+    el.style.animationDelay = (Math.random()*0.6)+'s';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    layer.appendChild(el);
+  }
+  setTimeout(()=>{ layer.innerHTML=''; }, 4500);
+}
+
+/* ======================= DATA ======================= */
+const ANA_MEEN = [
+{t:"نيش", c:["انا مش غالي اوي بس الي جوايا اغلى","انا بيحصل بسببي مشاكل","انا الستاتة هي الي بتشتريني","انا جزء من عفش البيتة","لا ده كده انتو اغبيه"]},
+{t:"العنب", c:["انا طعمي حلو وفي مني انواع","ممكن اتغير وابقى ليا شكل وطعم مختلف","ممكن فاكهتي تبقى ببذر او من غير","لو اتسابت ممكن اكون حاجة حرام","اغبيه"]},
+{t:"البيضة", c:["انا عبارة عن 3 مكونات او طبقات","لما اتولد ممكن اكبر وابقى زي امي او افضل منها","انا صلبة من برة وسايلة من جوة","انتو بتشتموا بعض بأسمي","اغبيه"]},
+{t:"يخت", c:["انا ممكن تقول عليا وسيلة مواصلات","بس انا اكتر رفاهية","موجود في الاماكن السياحية","انا ابن المركب","اغبيه"]},
+{t:"البيانو", c:["انا عندي مفاتيح","صوتي حلو لو انت هتعرف تخليني اغني","انا بحتاج كرسي عشان تعرف تستخدمني","مفاتيحي لونها ابيض واسود وليهم صوت","اغبيه"]},
+{t:"الملح", c:["انا مش اكلة بس اهم منها","لو زودت مني ممكن يجيلك مرض","بدوني الاكل بيبقى معفن","من غيري اكلك مالوش طعم","اغبيه"]},
+{t:"التعبان", c:["انا استحالة تحبني","انا بحب الفيران","انا مليش ايد ولا رجل","انا بيش","اغبيه"]},
+{t:"نافورة", c:["انا في الاغلب بكون في الاماكن الترفيهية","انا مش مهمة بس بديّ شكل حلو","انا بشتغل بالمية","الحاجة دي مش كويسة شغالة رقاعة","اغبيه"]},
+{t:"الفضاء", c:["انا ممكن اكون من اكبر الحاجات اللي تعرفها","معنديش هواء","معنديش كائنات حية","انا عندي كواكب ونجوم","مكوك ايه يا اغبيه"]},
+{t:"الموز", c:["انا حاجة بتتاكل","انا مليش بذر","بابقى خضرا وبعدها بصفرّ","بيكلني حيوانات وبشر","اغبيه"]},
+{t:"بوفتيك", c:["انا اكلة شبه اكلة تانية في الشكل","عشان اتعمل لازم اتضرب","بتتعمل من اللحمة","بتتقلي","اغبيه"]},
+{t:"البرواز", c:["انا اعتبر ديكور في البيت","وظيفتي اني احافظ على الحاجة وابينها","قيمتي مش اوي، اللي جوايا هو الاهم","بتتعمل في الغالب من الخشب","اغبيه"]},
+{t:"الحوت", c:["انا حيوان كبير","مع ان شكلي يخوف بس بحب الجمبري","مش بظهر كتير وممكن متكونش شفتني","انا اكبر حيوان على وجه الارض","اغبيه"]},
+{t:"شد الحبل", c:["انا لعبة بتكون بين طرفين","اللي بيكسب هو الاقوى غالبا","بتتلعب باداة واحدة","الفريقين بيستخدموني في نفس الوقت","اغبيه"]},
+{t:"الترمومتر", c:["انا اداة طبية الدكتور بيكشف عليك بيها","انا من الازاز","جوايا حاجة سايلة","بحس بالحرارة","اغبيه"]},
+{t:"البانوراما", c:["انا مكان الناس بتيجيله عشان تتفرج على اللي بحكيه","انا اقدم من السينما شوية","بخليكو تلفوا في مكانكو","موجود في مصر وبحكي عن الحرب","اغبيه"]},
+{t:"الولاعة", c:["انا حاجة غالية اوي اوي","معب جدا تلقيني","لو لقيتني يبقى في حاجة قافلة عليا","لازم تشعلني عشان تجيبني","اغبيه"]},
+{t:"الظل", c:["انا حاجة موجودة معاك طول حياتك","بكبر لما انت بتكبر","بس ممكن ساعات ابقى اكبر او اصغر منك","بظهر الصبح وساعات بالليل","اغبيه"]},
+{t:"الزلزال", c:["انا حاجة طبيعية","لما باجي بيحصل مشاكل كتير","اتحسسوا بيا كتير من فترة جاية جنبكو والشهرة على السوشيال","ممكن ناس تموت بسببي","اغبيه"]},
+{t:"كوارع", c:["انا اكلة مش الكل بيحبها","بتتعمل شوربة","انا جزء من اجزاء العجل","متكونة من عظم","اغبيه"]},
+{t:"زبادي", c:["انا سناكس اكتر مني اكلة","بس ممكن ادخل في الاكل العادي","لوني ابيض","قوامي تقيل وبتتعمل من اللبن","اغبيه"]},
+{t:"العلم", c:["انا حاجة مميزة جدا","بعبر عن كل بلد بشكل","فيا الوان كتير","شكلي مستطيل","اغبيه"]},
+{t:"ابو قردان", c:["انا طائر ابيض","وعندي جناحين","بوقي لونه اصفر","شغال في الغيط","اغبيه"]},
+{t:"كنكة", c:["مش كل الناس بتحب تستخدمني","بغلي اللي جوايا","في الاغلب بكون صغيرة بس فيه مني كبير كمان","انا واللي جوايا هنسعدك تسهر","اغبيه"]},
+{t:"بركان", c:["انا حاجة كبيرة اوي","عمرك ما شوفتني قريب","لو طلعت اللي جوايا هتزعل","انا سبب موت اقدم حيوانات على الارض","اغبيه"]},
+{t:"راوتر", c:["انا حاجة موجودة في كل بيت","جدودك معرفوش عني حاجة","وظيفتي اني اوزع حاجة معينة","بتتدفع تكلفتي كل شهر","اغبيه"]},
+{t:"الجرنال", c:["جدودك استخدموني","لسه موجود لحد النهاردة بس بنسخ متطورة","بعرفك الدنيا فيها ايه","فيا كلمات بيضة وسودا وساعات ملونة","اغبيه"]},
+{t:"طفاية حريق", c:["انا حديد وجوايا حاجة بيضة","لازم اكون موجود في كل مول او مكان مهم","بلم المصايب","لوني احمر","اغبيه"]},
+{t:"سبانخ", c:["بيكلوني عشان قيمتي الغذائية","لوني شبه اكلة تانية بس بتتعمل شوربة","ظهرت في كرتون قديم","ياعم فيا حديد","اغبيه"]},
+{t:"المرايا", c:["مش مهمة اوي بس موجودة في كل بيت","مسالمة بس لو اتهملت ممكن اضرك","بورّيك انت نفسك","معمولة من ازاز","اغبيه"]},
+{t:"منارة", c:["انا مبنى طويل","بساعدك انك متتوهش وانت في الطريق","بنورلك الطريق بالليل","بكون في وسط البحر او على الشط","لا انت كده غبي"]},
+{t:"جسر", c:["كنت موجود من زمان وشكلي اتغير","كنت بتتعمل من الخشب","لو اتقفلت هامنعك تعدي","لو اتفتحت هوملّت بين مكانين وخليتك تعدي","موجود في القلعة"]},
+{t:"حديقة الحيوان", c:["انا مكان للخروج","مكان الناس بتيجي عشان تشوف الحياة اللي عندي","اغلب اللي بيجيلي اطفال مع عيلتهم","عندي اقفاص","عندي حيوانات يا حيوان"]},
+{t:"بطاطا", c:["انا حاجة بتتاكل","بتتزرع تحت الارض","ممكن ابقى حلوة او حادقة","من برة بني ومن جوة برتقاني","بتتعمل في الفرن واسمها بتاعي مكمورة"]},
+{t:"سرير", c:["لازم تستخدمني كل يوم","موجود في كل بيت","ليا اكتر من شكل وحجم","اهم استخدام ليا اني بساعدك تستريح","يا غبي كل ليلة بتشوفني"]},
+{t:"سرنجة", c:["بساعدك عشان تخف","اداة من الادوات الطبية","بشيل الدوا","لما باجي مع اخواتي العيال بيخافوا مننا","على وزن رنجة"]},
+];
+
+const WASF_WORDS = [
+"ايطاليا","غزال","غزل بنات","كفر الدهب","الهلال","محيط","ابو الهول","متحف","منارة",
+"رمان","خندق","مبار","معمرة","صحراء","أمواج","رواية","مكوك فضاء","سمان",
+"سرداب","قنديل","جرح","دولفين","عمدة","هامستر","فهد","حارس مرمى"
+];
+
+const TRIVIA_QUESTIONS = [
+  { q:"مين اللي اكتشف قانون الجاذبية؟", options:["نيوتن","اينشتاين","جاليليو","كوبرنيكوس"], correct:0 },
+  { q:"عاصمة استراليا ايه؟", options:["سيدني","ملبورن","كانبيرا","بريزبين"], correct:2 },
+  { q:"اكبر محيط في العالم اسمه ايه؟", options:["الأطلسي","الهندي","الهادي","المتجمد الشمالي"], correct:2 },
+  { q:"الأهرامات الموجودة في الجيزة عددها كام؟", options:["اتنين","تلاتة","اربعة","خمسة"], correct:1 },
+  { q:"اسرع حيوان بري في العالم؟", options:["الأسد","الفهد","النمر","الحصان"], correct:1 },
+  { q:"اطول نهر في العالم؟", options:["النيل","الأمازون","المسيسيبي","اليانغتسي"], correct:0 },
+  { q:"كوكب ايه اللي بيتلقب بالكوكب الأحمر؟", options:["المشتري","الزهرة","المريخ","زحل"], correct:2 },
+  { q:"مين اللي رسم لوحة الموناليزا؟", options:["ميكل انجلو","ليوناردو دافينشي","فان جوخ","بيكاسو"], correct:1 },
+];
+
+const FACT_OR_FICTION = [
+  { s:"العسل ممكن يفضل صالح للأكل لآلاف السنين من غير ما يبوظ", isFact:true },
+  { s:"لو بلعت علكة هتفضل في بطنك 7 سنين", isFact:false },
+  { s:"الاخطبوط عنده 3 قلوب", isFact:true },
+  { s:"احنا بنستخدم بس 10% من مخنا طول الوقت", isFact:false },
+  { s:"الموز نوع من التوت، بس الفراولة مش كده", isFact:true },
+  { s:"لو نمت شعرك اتلقط بيبقى بيكبر اسرع", isFact:false },
+  { s:"الشمس أكبر من الأرض بحوالي مليون مرة في الحجم", isFact:true },
+  { s:"الزجاج القديم بيسيح ببطء لتحت مع الوقت عشان هو سايل", isFact:false },
+];
+
+const DRAW_WORDS = [
+  "فيل","طيارة","شمسية","جيتار","ساعة","بيت","سمكة","قلب",
+  "نجمة","تمساح","دراجة","برج ايفل","ثعلب","فراشة","قطار"
+];
+
+const GAME_TYPES = {
+  anameen:     { key:"anameen",     name:"أنا مين؟",         points:[5,4,3,2,1] },
+  maglouba:    { key:"maglouba",    name:"كلمات مقلوبة",      points:3, time:45 },
+  wasf:        { key:"wasf",        name:"اوصف من غير كلام",  points:2, time:60 },
+  trivia:      { key:"trivia",      name:"اختار الصح",       points:2 },
+  factfiction: { key:"factfiction", name:"علم ولا خيال",      points:3, time:10 },
+  draw:        { key:"draw",        name:"ارسم واكسب",        points:4, time:75 },
+};
+
+/* ======================= STATE ======================= */
+let S = {
+  mode:"teams",
+  teamCount:2,
+  teams:[],
+  totalRounds:12,
+  roundPlan:[],
+  currentRound:0,
+  usedAnaMeen:new Set(),
+  usedWasf:new Set(),
+  usedTrivia:new Set(),
+  usedFactFiction:new Set(),
+  usedDraw:new Set(),
+  timerHandle:null,
+};
+let CURRENT_ITEM=null, CURRENT_TYPE=null, CLUE_IDX=0;
+
+function shuffle(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function buildRoundPlan(n){
+  const plan=[];
+  const types = ["anameen","maglouba","wasf","trivia","factfiction","draw"];
+  while(plan.length<n){ plan.push(...shuffle(types)); }
+  return plan.slice(0,n);
+}
+function pickItem(bank, usedSet){
+  if(usedSet.size>=bank.length) usedSet.clear();
+  let idx;
+  do{ idx=Math.floor(Math.random()*bank.length); }while(usedSet.has(idx));
+  usedSet.add(idx);
+  return bank[idx];
+}
+
+/* ======================= DECO SVG (sparkle corner marks) ======================= */
+function starSVG(cls){
+  return `<svg class="corner-star ${cls}" viewBox="0 0 24 24" fill="none"><path d="M12 2 L13.6 10.4 L22 12 L13.6 13.6 L12 22 L10.4 13.6 L2 12 L10.4 10.4 Z" fill="#161311"/></svg>`;
+}
+function arcDeco(){
+  return `<svg class="arc-deco" viewBox="0 0 400 240" preserveAspectRatio="none">
+    <path d="M -20 -40 A 260 260 0 0 0 260 260" stroke="#161311" stroke-width="2" stroke-dasharray="6 6" fill="none"/>
+    <path d="M 140 -40 A 260 260 0 0 0 420 260" stroke="#161311" stroke-width="2" stroke-dasharray="6 6" fill="none" opacity="0.45"/>
+  </svg>`;
+}
+function stampOpen(){
+  return `<div class="stamp">${arcDeco()}${starSVG('tl')}${starSVG('tr')}${starSVG('bl')}${starSVG('br')}<div class="stamp-inner">`;
+}
+const stampClose = `</div></div>`;
+
+/* ======================= RENDER: SETUP ======================= */
+function renderSetup(){
+  if(S.teams.length !== S.teamCount){
+    const base = S.mode==='duel' ? "اللاعب" : "الفريق";
+    S.teams = Array.from({length:S.teamCount}, (_,i)=> S.teams[i] || {name:`${base} ${i+1}`, score:0});
+  }
+  const teamInputs = S.teams.map((tm,i)=>`
+    <input class="team-input" value="${tm.name}" oninput="updateTeamName(${i}, this.value)" placeholder="اسم ${S.mode==='duel'?'اللاعب':'الفريق'} ${i+1}">
+  `).join("");
+
+  document.getElementById('app').innerHTML = `
+    <div class="eyebrow">لعبة الجروب</div>
+    <div class="display-title">مين هيكسب <span class="accent">؟</span></div>
+    <div class="subtitle">6 العاب مختلفة عشوائية — كلها في لعبة واحدة</div>
+
+    <div class="panel">
+      <div class="mode-row">
+        <div class="mode-btn ${S.mode==='teams'?'active':''}" onclick="setMode('teams')">فرق</div>
+        <div class="mode-btn ${S.mode==='duel'?'active':''}" onclick="setMode('duel')">لاعب ضد لاعب</div>
+      </div>
+
+      ${S.mode==='teams' ? `
+        <div class="field-label" style="text-align:center;">عدد الفرق</div>
+        <div class="team-count-row">
+          <button class="count-btn" onclick="changeTeamCount(-1)">−</button>
+          <div class="count-val">${S.teamCount}</div>
+          <button class="count-btn" onclick="changeTeamCount(1)">+</button>
+        </div>
+      ` : ``}
+
+      <div class="field-label">اسماء ${S.mode==='duel'?'اللاعبين':'الفرق'}</div>
+      ${teamInputs}
+
+      <div class="field-label" style="text-align:center;">عدد الجولات</div>
+      <div class="rounds-row">
+        ${[9,12,15,18].map(n=>`<div class="round-chip ${S.totalRounds===n?'active':''}" onclick="setRounds(${n})">${n}</div>`).join("")}
+      </div>
+
+      <div style="margin-top:20px;">
+        <button class="btn on-dark-primary" onclick="startGame()">ابدأ اللعب</button>
+      </div>
+    </div>
+    <div class="footer-note">كل جولة اللعبة تختار نوع لعب عشوائي، وترجع تدور على الفرق بالتبادل</div>
+  `;
+}
+function setMode(m){ SFX.click(); S.mode=m; if(m==='duel'){ S.teamCount=2; } S.teams=[]; renderSetup(); }
+function changeTeamCount(d){ SFX.click(); S.teamCount=Math.min(6, Math.max(2, S.teamCount+d)); renderSetup(); }
+function updateTeamName(i,v){ S.teams[i].name = v || `فريق ${i+1}`; }
+function setRounds(n){ SFX.click(); S.totalRounds=n; renderSetup(); }
+
+function startGame(){
+  SFX.start();
+  S.teams.forEach(t=>t.score=0);
+  S.roundPlan = buildRoundPlan(S.totalRounds);
+  S.currentRound = 0;
+  S.usedAnaMeen = new Set();
+  S.usedWasf = new Set();
+  S.usedTrivia = new Set();
+  S.usedFactFiction = new Set();
+  S.usedDraw = new Set();
+  renderRoundStart();
+}
+
+/* ======================= HELPERS ======================= */
+function currentTeam(){ return S.teams[S.currentRound % S.teams.length]; }
+function scoreboardHTML(){
+  return `<div class="scoreboard">${S.teams.map((t,i)=>`
+    <div class="score-pill ${i===(S.currentRound % S.teams.length)?'turn':''}">
+      <div class="nm">${t.name}</div>
+      <div class="sc">${t.score}</div>
+    </div>`).join("")}</div>`;
+}
+
+/* ======================= RENDER: ROUND START (pre-reveal) ======================= */
+function renderRoundStart(){
+  CURRENT_TYPE = S.roundPlan[S.currentRound];
+  const gt = GAME_TYPES[CURRENT_TYPE];
+  CLUE_IDX = 0;
+
+  switch(CURRENT_TYPE){
+    case 'anameen': CURRENT_ITEM = pickItem(ANA_MEEN, S.usedAnaMeen); break;
+    case 'maglouba':
+    case 'wasf': CURRENT_ITEM = pickItem(WASF_WORDS, S.usedWasf); break;
+    case 'trivia': CURRENT_ITEM = pickItem(TRIVIA_QUESTIONS, S.usedTrivia); break;
+    case 'factfiction': CURRENT_ITEM = pickItem(FACT_OR_FICTION, S.usedFactFiction); break;
+    case 'draw': CURRENT_ITEM = pickItem(DRAW_WORDS, S.usedDraw); break;
+  }
+
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>${gt.name}</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">دور <b>${currentTeam().name}</b> — سلّم الجهاز للاعب اللي هيقرأ البطاقة</div>
+    ${stampOpen()}
+      <div class="badge-label red">${gt.name}</div>
+      <div class="ready-mark">؟</div>
+      <div class="instr">بس أنت اللي تشوف الكارت. متوريش الشاشة لفريقك.</div>
+      <div style="margin-top:18px;">
+        <button class="btn on-card-primary" onclick="revealRound()">أنا شايف — ابدأ</button>
+      </div>
+    ${stampClose}
+  `;
+}
+
+/* ======================= RENDER: PLAYING ======================= */
+function revealRound(){
+  SFX.click();
+  if(CURRENT_TYPE==='anameen') renderAnaMeen();
+  else if(CURRENT_TYPE==='maglouba') renderMaglouba();
+  else if(CURRENT_TYPE==='wasf') renderWasf();
+  else if(CURRENT_TYPE==='trivia') renderTrivia();
+  else if(CURRENT_TYPE==='factfiction') renderFactFiction();
+  else renderDraw();
+}
+
+function hintDots(){
+  let dots='';
+  for(let i=0;i<5;i++){ dots += `<div class="hint-dot ${i<=CLUE_IDX?'on':''}"></div>`; }
+  return `<div class="hint-progress">${dots}</div>`;
+}
+
+function renderAnaMeen(){
+  const item = CURRENT_ITEM;
+  const points = GAME_TYPES.anameen.points[CLUE_IDX];
+  const isLast = CLUE_IDX >= item.c.length-1;
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>أنا مين؟</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">اقرأ التلميح بصوت عالي، وخلي <b>${currentTeam().name}</b> يخمنوا</div>
+    ${stampOpen()}
+      <div class="points-badge">${points}</div>
+      ${hintDots()}
+      <div class="clue-box">${item.c[CLUE_IDX]}</div>
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn on-card-outline" onclick="nextClue()" ${isLast?'disabled':''}>${isLast?'آخر تلميح':'التلميح الجاي'}</button>
+        <button class="btn on-card-primary" onclick="scoreRound(${points})">خمّنوا صح ✔</button>
+      </div>
+      <button class="btn on-card-muted" style="margin-top:10px;" onclick="failRound()">محدش عرف / عدّي</button>
+    ${stampClose}
+  `;
+}
+function nextClue(){
+  if(CLUE_IDX < CURRENT_ITEM.c.length-1){ SFX.next(); CLUE_IDX++; renderAnaMeen(); }
+}
+
+function renderMaglouba(){
+  const word = CURRENT_ITEM;
+  const reversed = word.split('').reverse().join(' ');
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>كلمات مقلوبة</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">قول الكلمة اللي قدامك من الآخر للأول، حرف حرف — وخلي <b>${currentTeam().name}</b> يجمعوها</div>
+    ${stampOpen()}
+      <div class="badge-label">اتهجّاها بالعكس كده:</div>
+      <div class="word-display reversed">${reversed}</div>
+      <div class="timer-wrap">
+        <div class="timer-track"><div class="timer-fill" id="tfill" style="width:100%;"></div></div>
+        <div class="timer-num" id="tnum">${GAME_TYPES.maglouba.time}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn on-card-outline" onclick="failRound()">خلص الوقت / فشل</button>
+        <button class="btn on-card-primary" onclick="scoreRound(${GAME_TYPES.maglouba.points})">جمعوها صح ✔</button>
+      </div>
+    ${stampClose}
+  `;
+  startTimer(GAME_TYPES.maglouba.time);
+}
+
+function renderWasf(){
+  const word = CURRENT_ITEM;
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>اوصف من غير كلام</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">صف الكلمة لفريق <b>${currentTeam().name}</b> من غير ما تقول أي جزء منها أو حرف من اسمها</div>
+    ${stampOpen()}
+      <div class="badge-label">الكلمة</div>
+      <div class="word-display">${word}</div>
+      <div class="timer-wrap">
+        <div class="timer-track"><div class="timer-fill" id="tfill" style="width:100%;"></div></div>
+        <div class="timer-num" id="tnum">${GAME_TYPES.wasf.time}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn on-card-outline" onclick="failRound()">خلص الوقت / فشل</button>
+        <button class="btn on-card-primary" onclick="scoreRound(${GAME_TYPES.wasf.points})">خمّنوا صح ✔</button>
+      </div>
+    ${stampClose}
+  `;
+  startTimer(GAME_TYPES.wasf.time);
+}
+
+function renderTrivia(){
+  const item = CURRENT_ITEM;
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>اختار الصح</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">اقرأ السؤال بصوت عالي، وخلي <b>${currentTeam().name}</b> يختاروا الاجابة</div>
+    ${stampOpen()}
+      <div class="badge-label red">اختار الصح</div>
+      <div class="clue-box">${item.q}</div>
+      <div class="options-grid">
+        ${item.options.map((op,i)=>`<button class="btn on-card-outline opt-btn" onclick="selectTrivia(${i})">${op}</button>`).join("")}
+      </div>
+    ${stampClose}
+  `;
+}
+function selectTrivia(i){
+  SFX.click();
+  if(i===CURRENT_ITEM.correct) scoreRound(GAME_TYPES.trivia.points);
+  else failRound();
+}
+
+function renderFactFiction(){
+  const item = CURRENT_ITEM;
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>علم ولا خيال</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">اقرأ الجملة، وخلي <b>${currentTeam().name}</b> يقرروا بسرعة قبل ما الوقت يخلص</div>
+    ${stampOpen()}
+      <div class="badge-label red">علم ولا خيال؟</div>
+      <div class="clue-box">${item.s}</div>
+      <div class="timer-wrap">
+        <div class="timer-track"><div class="timer-fill" id="tfill" style="width:100%;"></div></div>
+        <div class="timer-num" id="tnum">${GAME_TYPES.factfiction.time}</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn on-card-outline" onclick="selectFactFiction(true)">علم ✅</button>
+        <button class="btn on-card-primary" onclick="selectFactFiction(false)">خيال ❌</button>
+      </div>
+    ${stampClose}
+  `;
+  startTimer(GAME_TYPES.factfiction.time);
+}
+function selectFactFiction(choice){
+  clearInterval(S.timerHandle);
+  SFX.click();
+  if(choice===CURRENT_ITEM.isFact) scoreRound(GAME_TYPES.factfiction.points);
+  else failRound();
+}
+
+function renderDraw(){
+  const word = CURRENT_ITEM;
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>ارسم واكسب</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">اللي عليه الدور من <b>${currentTeam().name}</b> ياخد الجهاز، يحفظ الكلمة، وبعدين يبدأ الرسم لفريقه</div>
+    ${stampOpen()}
+      <div class="badge-label red">الكلمة اللي هترسمها</div>
+      <div class="word-display">${word}</div>
+      <div class="instr">احفظها كويس... لما تدوس هتختفي ويظهر لوح الرسم</div>
+      <div style="margin-top:16px;">
+        <button class="btn on-card-primary" onclick="startDrawingCanvas()">جاهز — ابدأ الرسم</button>
+      </div>
+    ${stampClose}
+  `;
+}
+function startDrawingCanvas(){
+  SFX.click();
+  document.getElementById('app').innerHTML = `
+    <div class="topbar"><span>جولة ${S.currentRound+1} من ${S.totalRounds}</span><span>ارسم واكسب</span></div>
+    ${scoreboardHTML()}
+    <div class="turn-line">فريق <b>${currentTeam().name}</b> خمنوا الرسمة!</div>
+    ${stampOpen()}
+      <div class="timer-wrap">
+        <div class="timer-track"><div class="timer-fill" id="tfill" style="width:100%;"></div></div>
+        <div class="timer-num" id="tnum">${GAME_TYPES.draw.time}</div>
+      </div>
+      <canvas id="drawCanvas" width="320" height="280"></canvas>
+      <div class="clear-row">
+        <button class="btn on-card-outline clear-btn" onclick="clearCanvas()">امسح اللوح</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn on-card-outline" onclick="failRound()">خلص الوقت / فشل</button>
+        <button class="btn on-card-primary" onclick="scoreRound(${GAME_TYPES.draw.points})">خمّنوا صح ✔</button>
+      </div>
+    ${stampClose}
+  `;
+  setupCanvas();
+  startTimer(GAME_TYPES.draw.time);
+}
+function setupCanvas(){
+  const canvas = document.getElementById('drawCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = '#161311'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  let drawing = false, last = null;
+  function pos(e){
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches && e.touches[0];
+    const clientX = t ? t.clientX : e.clientX;
+    const clientY = t ? t.clientY : e.clientY;
+    return {
+      x: (clientX - rect.left) * (canvas.width / rect.width),
+      y: (clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+  function start(e){ drawing = true; last = pos(e); e.preventDefault(); }
+  function move(e){
+    if(!drawing) return;
+    const p = pos(e);
+    ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+    last = p; e.preventDefault();
+  }
+  function end(){ drawing = false; }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+function clearCanvas(){
+  SFX.click();
+  const canvas = document.getElementById('drawCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function startTimer(total){
+  clearInterval(S.timerHandle);
+  let t = total;
+  S.timerHandle = setInterval(()=>{
+    t--;
+    const fill = document.getElementById('tfill');
+    const num = document.getElementById('tnum');
+    if(fill) fill.style.width = Math.max(0,(t/total*100))+'%';
+    if(num){
+      num.textContent = Math.max(0,t);
+      num.classList.toggle('urgent', t<=5 && t>0);
+    }
+    if(t<=5 && t>0){ SFX.tick(); }
+    if(t<=0){ clearInterval(S.timerHandle); failRound(); }
+  },1000);
+}
+
+/* ======================= SCORING / RESULT ======================= */
+function scoreRound(points){
+  clearInterval(S.timerHandle);
+  SFX.correct();
+  currentTeam().score += points;
+  showResult(true, points);
+}
+function failRound(){
+  clearInterval(S.timerHandle);
+  SFX.fail();
+  showResult(false, 0);
+}
+function showResult(won, points){
+  let answer;
+  if(CURRENT_TYPE==='anameen') answer = CURRENT_ITEM.t;
+  else if(CURRENT_TYPE==='trivia') answer = CURRENT_ITEM.options[CURRENT_ITEM.correct];
+  else if(CURRENT_TYPE==='factfiction') answer = CURRENT_ITEM.isFact ? 'علم — معلومة صحيحة ✅' : 'خيال — معلومة غلط ❌';
+  else answer = CURRENT_ITEM;
+  document.getElementById('app').innerHTML = `
+    ${stampOpen()}
+      <div class="result-title">${won? 'برافو! 🎉' : 'محدش عرفها 😅'}</div>
+      <div class="result-sub">${won? `+${points} نقطة لـ ${currentTeam().name}` : 'مفيش نقاط الجولة دي'}</div>
+      <div class="badge-label">الاجابة كانت</div>
+      <div class="answer-reveal">${answer}</div>
+      <button class="btn on-card-primary" onclick="nextRound()">${S.currentRound+1 >= S.totalRounds ? 'شوف النتيجة النهائية' : 'الجولة الجاية'}</button>
+    ${stampClose}
+  `;
+}
+function nextRound(){
+  SFX.click();
+  S.currentRound++;
+  if(S.currentRound >= S.totalRounds){ renderResults(); }
+  else{ renderRoundStart(); }
+}
+
+/* ======================= RESULTS ======================= */
+function renderResults(){
+  SFX.fanfare();
+  burstConfetti();
+  const sorted = S.teams.slice().sort((a,b)=>b.score-a.score);
+  const winner = sorted[0];
+  document.getElementById('app').innerHTML = `
+    <div class="eyebrow">خلصت اللعبة</div>
+    <div class="display-title">الفايز: <span class="accent">${winner.name}</span></div>
+    <div class="subtitle">بـ ${winner.score} نقطة</div>
+    ${stampOpen()}
+      <div class="badge-label">النتيجة النهائية</div>
+      <div style="margin-top:12px;">
+        ${sorted.map((t,i)=>`
+          <div class="lb-row ${i===0?'winner':''}">
+            <div class="lb-rank">${i+1}</div>
+            <div class="lb-name">${t.name}</div>
+            <div class="lb-score">${t.score}</div>
+          </div>
+        `).join("")}
+      </div>
+      <button class="btn on-card-primary" style="margin-top:16px;" onclick="resetGame()">لعبة جديدة</button>
+    ${stampClose}
+  `;
+}
+function resetGame(){
+  SFX.click();
+  S.teams.forEach(t=>t.score=0);
+  renderSetup();
+}
+
+/* ======================= INIT ======================= */
+renderSetup();
+</script>
+</body>
+</html>

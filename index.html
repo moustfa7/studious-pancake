@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>فيلم فيلم — لعبة التمثيل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#150509;
+    --bg-1:#2a0d16;
+    --bg-2:#3d1420;
+    --wine:#4a1826;
+    --gold:#d4af37;
+    --gold-bright:#eecb62;
+    --cream:#f4ece1;
+    --cream-dim:#cbb9ae;
+    --ok:#7fb069;
+    --ok-bright:#9ed17f;
+    --bad:#d6564a;
+    --team-a:#c9762f;
+    --team-b:#5c8fb8;
+    --team-c:#8a6bbf;
+    --team-d:#6bab8e;
+    --shadow: 0 20px 50px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Cairo',sans-serif;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #4a1826 0%, transparent 60%),
+      radial-gradient(900px 600px at 90% 110%, #2a0d16 0%, transparent 55%),
+      linear-gradient(180deg, var(--bg-0), var(--bg-1) 45%, var(--bg-0));
+    color:var(--cream);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow-x:hidden;
+  }
+  .stage{
+    width:100%;
+    max-width:520px;
+    min-height:100vh;
+    padding:24px 18px 40px;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  /* film sprocket strip decoration */
+  .sprockets{
+    position:fixed; top:0; bottom:0; width:22px; z-index:0; opacity:.35; pointer-events:none;
+    background-image: radial-gradient(circle, var(--gold) 3px, transparent 3.5px);
+    background-size: 22px 34px;
+    background-position: center;
+  }
+  .sprockets.left{left:0;}
+  .sprockets.right{right:0;}
+  @media (max-width:560px){ .sprockets{display:none;} }
+
+  .brand{
+    text-align:center;
+    margin-bottom:18px;
+    position:relative; z-index:1;
+  }
+  .brand .eyebrow{
+    font-size:12px; letter-spacing:.35em; color:var(--gold); text-transform:uppercase; opacity:.85;
+  }
+  .brand h1{
+    font-family:'Amiri', serif;
+    font-size:44px;
+    margin:4px 0 0;
+    color:var(--gold-bright);
+    text-shadow: 0 2px 0 rgba(0,0,0,.4), 0 0 40px rgba(212,175,55,.25);
+    font-weight:700;
+  }
+  .brand h1 span{ color:var(--cream); }
+
+  .panel{
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.15)), var(--bg-2);
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:22px;
+    padding:22px;
+    box-shadow:var(--shadow);
+    position:relative; z-index:1;
+  }
+
+  h2.title{
+    font-size:19px; margin:0 0 4px; color:var(--gold-bright); font-weight:800;
+  }
+  p.sub{ margin:0 0 18px; color:var(--cream-dim); font-size:14px; line-height:1.6; }
+
+  label{ display:block; font-size:13px; color:var(--cream-dim); margin:14px 0 6px; font-weight:600;}
+  input[type=text], input[type=number]{
+    width:100%; padding:13px 14px; border-radius:12px; border:1px solid rgba(212,175,55,.3);
+    background:rgba(0,0,0,.25); color:var(--cream); font-family:'Cairo',sans-serif; font-size:16px; font-weight:600;
+    outline:none;
+  }
+  input:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(212,175,55,.15); }
+  input::placeholder{ color:#8a7266; }
+
+  .team-row{ display:flex; gap:10px; align-items:center; margin-top:10px; }
+  .team-row .dot{ width:12px; height:12px; border-radius:50%; flex:0 0 auto; }
+  .team-row input{ flex:1; }
+
+  .stepper{ display:flex; align-items:center; gap:14px; margin-top:8px; }
+  .stepper button{
+    width:42px; height:42px; border-radius:50%; border:1px solid rgba(212,175,55,.4);
+    background:rgba(212,175,55,.08); color:var(--gold-bright); font-size:20px; font-weight:800; cursor:pointer;
+  }
+  .stepper .val{ font-size:22px; font-weight:800; min-width:64px; text-align:center; color:var(--cream); }
+  .stepper .unit{ color:var(--cream-dim); font-size:13px; }
+
+  .team-count-row{ display:flex; gap:10px; margin-top:8px; }
+  .chip{
+    flex:1; text-align:center; padding:10px 6px; border-radius:12px; border:1px solid rgba(212,175,55,.3);
+    background:rgba(0,0,0,.2); color:var(--cream-dim); font-weight:700; cursor:pointer; font-size:15px;
+  }
+  .chip.active{ background:linear-gradient(180deg, var(--gold), #b8912a); color:#241005; border-color:transparent; }
+
+  .btn{
+    display:block; width:100%; text-align:center; padding:16px; border-radius:14px; border:none;
+    font-family:'Cairo',sans-serif; font-weight:800; font-size:17px; cursor:pointer; margin-top:22px;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:#2a1607; box-shadow:0 10px 24px rgba(212,175,55,.25);
+    letter-spacing:.02em;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn.secondary{
+    background:rgba(255,255,255,.06); color:var(--cream); border:1px solid rgba(255,255,255,.15); box-shadow:none;
+  }
+  .btn.ghost{
+    background:transparent; color:var(--gold-bright); border:1px solid rgba(212,175,55,.35); box-shadow:none;
+  }
+  .btn.ok{ background:linear-gradient(180deg,var(--ok-bright),var(--ok)); color:#0e2412; }
+  .btn.bad{ background:linear-gradient(180deg,#e07a70,var(--bad)); color:#2a0705; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; margin-top:12px; }
+  .btn-row .btn{ margin-top:0; }
+
+  .error-msg{ color:#f2a29a; font-size:13px; margin-top:8px; min-height:16px; }
+
+  /* ---- Turn intro ---- */
+  .turn-badge{
+    display:inline-flex; align-items:center; gap:8px; padding:8px 16px; border-radius:999px;
+    font-weight:800; font-size:14px; margin-bottom:8px;
+  }
+  .round-tag{ text-align:center; color:var(--cream-dim); font-size:13px; letter-spacing:.15em; text-transform:uppercase; margin-bottom:10px;}
+  .center{ text-align:center; }
+  .clapper{ font-size:54px; margin:6px 0 4px; }
+  .team-name-big{ font-family:'Amiri',serif; font-size:32px; font-weight:700; margin:6px 0 2px; }
+  .score-strip{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px; }
+  .score-pill{ padding:7px 12px; border-radius:999px; font-size:13px; font-weight:700; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); }
+
+  /* ---- Timer ring ---- */
+  .ring-wrap{ position:relative; width:150px; height:150px; margin:6px auto 4px; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:rgba(255,255,255,.08); stroke-width:10; }
+  .ring-fg{ fill:none; stroke:var(--gold-bright); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset .3s linear, stroke .3s; }
+  .ring-num{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:38px; font-weight:900; color:var(--cream); }
+
+  /* ---- Number entry ---- */
+  .range-hint{ text-align:center; color:var(--cream-dim); font-size:12px; margin-top:8px; }
+
+  /* ---- Ticket / reveal card ---- */
+  .ticket{
+    margin-top:18px; border-radius:16px; position:relative; overflow:hidden;
+    background:linear-gradient(180deg, rgba(212,175,55,.14), rgba(212,175,55,.04));
+    border:1px solid rgba(212,175,55,.4);
+    padding:26px 20px 22px;
+    text-align:center;
+  }
+  .ticket:before, .ticket:after{
+    content:""; position:absolute; top:50%; width:22px; height:22px; background:var(--bg-2); border-radius:50%;
+    transform:translateY(-50%); box-shadow: inset 0 0 0 1px rgba(212,175,55,.4);
+  }
+  .ticket:before{ left:-11px; }
+  .ticket:after{ right:-11px; }
+  .ticket .cat{
+    display:inline-block; padding:5px 14px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.05em;
+    background:rgba(0,0,0,.25); color:var(--gold-bright); margin-bottom:12px; border:1px solid rgba(212,175,55,.3);
+  }
+  .ticket .name{ font-family:'Amiri',serif; font-size:30px; font-weight:700; color:var(--cream); line-height:1.35; }
+  .ticket .actors{ margin-top:10px; color:var(--cream-dim); font-size:14px; }
+  .ticket .item-id{ position:absolute; top:10px; right:16px; font-size:11px; color:var(--cream-dim); opacity:.6; }
+  .placeholder-ticket{ color:var(--cream-dim); font-size:14px; padding:36px 10px; }
+
+  .fade-in{ animation:fadeIn .35s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---- results ---- */
+  .podium{ display:flex; flex-direction:column; gap:10px; margin-top:16px; }
+  .podium-row{
+    display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-radius:14px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  }
+  .podium-row.first{ background:linear-gradient(90deg, rgba(212,175,55,.25), rgba(212,175,55,.05)); border-color:rgba(212,175,55,.5); }
+  .podium-rank{ font-weight:900; font-size:18px; width:28px; }
+  .podium-name{ flex:1; font-weight:700; font-size:16px; margin-right:8px; }
+  .podium-score{ font-weight:900; font-size:18px; color:var(--gold-bright); }
+
+  .footer-note{ text-align:center; color:var(--cream-dim); font-size:11px; margin-top:24px; opacity:.6; }
+
+  .hidden{ display:none !important; }
+
+  .sticky-score{
+    position:sticky; top:8px; z-index:20;
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    padding:10px 12px; margin-bottom:16px;
+    background:rgba(21,5,9,.88); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(212,175,55,.35); border-radius:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  .sticky-score .pill{
+    display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+    font-size:13px; font-weight:800; color:var(--cream-dim);
+  }
+  .sticky-score .pill .dot{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
+  .sticky-score .pill .num{ color:var(--gold-bright); font-size:14px; }
+  .sticky-score .pill.active{
+    background:rgba(212,175,55,.14); border-color:rgba(212,175,55,.55); color:var(--cream);
+  }
+</style>
+</head>
+<body>
+
+<div class="sprockets left"></div>
+<div class="sprockets right"></div>
+
+<div class="stage">
+
+  <div class="brand">
+    <div class="eyebrow">لعبة مصرية أصيلة</div>
+    <h1>فيلم <span>فيلم</span> ؟!</h1>
+  </div>
+
+  <div id="sticky-score" class="sticky-score hidden"></div>
+
+  <!-- ===================== SCREEN 1: SETUP ===================== -->
+  <div id="screen-setup" class="panel">
+    <h2 class="title">جهّز اللعبة</h2>
+    <p class="sub">حدد الفرق وعدد الجولات والوقت، وابدأ التمثيل. كل لاعب هياخد التليفون في دوره ويكتب رقم من 1 لـ<span id="max-hint"></span> يطلعله فيلم أو مسلسل أو أغنية يمثله لفريقه.</p>
+
+    <label>عدد الفرق</label>
+    <div class="team-count-row" id="team-count-row"></div>
+
+    <div id="team-names-wrap"></div>
+
+    <label>عدد الجولات (كل جولة = دور لكل فريق)</label>
+    <div class="stepper">
+      <button type="button" id="rounds-minus">−</button>
+      <div class="val" id="rounds-val">3</div>
+      <button type="button" id="rounds-plus">+</button>
+      <span class="unit">جولات</span>
+    </div>
+
+    <label>مدة كل دور</label>
+    <div class="stepper">
+      <button type="button" id="timer-minus">−</button>
+      <div class="val" id="timer-val">60</div>
+      <button type="button" id="timer-plus">+</button>
+      <span class="unit">ثانية</span>
+    </div>
+
+    <div class="error-msg" id="setup-error"></div>
+    <button class="btn" id="start-game-btn">ابدأ اللعبة 🎬</button>
+  </div>
+
+  <!-- ===================== SCREEN 2: TURN INTRO ===================== -->
+  <div id="screen-intro" class="panel hidden">
+    <div class="round-tag">جولة <span id="intro-round-num"></span> من <span id="intro-round-total"></span></div>
+    <div class="center">
+      <div class="clapper">🎬</div>
+      <div class="sub" style="margin-bottom:0;">دور فريق</div>
+      <div class="team-name-big" id="intro-team-name"></div>
+    </div>
+    <p class="sub center">هاتي التليفون، لما تكون جاهز دوس ابدأ وهيجري التايمر على طول.</p>
+    <button class="btn" id="begin-turn-btn">ابدأ الدور ▶</button>
+    <div class="score-strip" id="intro-scores"></div>
+  </div>
+
+  <!-- ===================== SCREEN 3: PLAY ===================== -->
+  <div id="screen-play" class="panel hidden">
+    <div class="round-tag">جولة <span id="play-round-num"></span> · فريق <span id="play-team-name"></span></div>
+
+    <div id="pick-phase">
+      <button class="btn secondary" id="random-num-btn">اختار عنصر عشوائي 🎲</button>
+    </div>
+
+    <div id="ticket-area">
+      <div class="ticket placeholder-ticket" id="ticket-placeholder">دوس "اختار عنصر عشوائي" 🎟️</div>
+    </div>
+
+    <div id="ring-block" class="hidden">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="60" cy="60" r="52"></circle>
+        </svg>
+        <div class="ring-num" id="ring-num">60</div>
+      </div>
+
+      <button class="btn" id="start-timer-btn">جاهز، ابدأ الوقت ▶</button>
+
+      <div class="btn-row hidden" id="answer-buttons">
+        <button class="btn ok" id="correct-btn">صح ✅</button>
+        <button class="btn bad" id="wrong-btn">غلط ❌</button>
+      </div>
+    </div>
+
+    <div class="score-strip" id="play-scores"></div>
+  </div>
+
+  <!-- ===================== SCREEN 4: TIME UP ===================== -->
+  <div id="screen-timeup" class="panel hidden">
+    <div class="center">
+      <div class="clapper" id="timeup-emoji">⏱️</div>
+      <h2 class="title" style="margin-top:6px;" id="timeup-headline">خلص الوقت!</h2>
+      <p class="sub" id="timeup-line">فريق <b>—</b> جاب نقطة في الدور ده.</p>
+    </div>
+
+    <button class="btn" id="next-turn-btn">التالي ▶</button>
+    <div class="score-strip" id="timeup-scores"></div>
+  </div>
+
+  <!-- ===================== SCREEN 5: RESULTS ===================== -->
+  <div id="screen-results" class="panel hidden">
+    <div class="center">
+      <div class="clapper">🏆</div>
+      <h2 class="title" style="margin-top:6px;">خلصت اللعبة!</h2>
+      <p class="sub" id="winner-line"></p>
+    </div>
+    <div class="podium" id="podium"></div>
+    <button class="btn" id="continue-btn">نكمل بنفس النتيجة ▶</button>
+    <button class="btn secondary" id="restart-btn">لعبة جديدة 🔁</button>
+  </div>
+
+  <!-- ===================== SCREEN 6: EXTEND ===================== -->
+  <div id="screen-extend" class="panel hidden">
+    <h2 class="title">كام جولة نزوّد؟</h2>
+    <p class="sub">هتكملوا بنفس النقط والفرق، والأفلام اللي اتقالت قبل كده مش هتتكرر.</p>
+    <div class="stepper">
+      <button type="button" id="extend-minus">−</button>
+      <div class="val" id="extend-val">3</div>
+      <button type="button" id="extend-plus">+</button>
+      <span class="unit">جولات</span>
+    </div>
+    <button class="btn" id="confirm-extend-btn">يلا كمّل 🔁</button>
+    <button class="btn ghost" id="cancel-extend-btn">رجوع</button>
+  </div>
+
+  <div class="footer-note">فيلم فيلم — ١٠١٧ فيلم ومسلسل وأغنية ومسرحية</div>
+</div>
+
+<script>
+const ITEMS = [{"id": 1, "cat": "فيلم", "name": "معالي الوزير", "actors": "احمد زكي"}, {"id": 2, "cat": "فيلم", "name": "نحن لا نزرع الشوك", "actors": "شادية - محمود يس"}, {"id": 3, "cat": "مسلسل", "name": "فهد البطل", "actors": "احمد العوضي"}, {"id": 4, "cat": "فيلم", "name": "بنك الحظ", "actors": "محمد ممدوح - اكرم حسني"}, {"id": 5, "cat": "فيلم", "name": "بنات وسط البلد", "actors": "منة شلبي - هند صبري"}, {"id": 6, "cat": "مسلسل", "name": "الست موناليزا", "actors": "مي عمر"}, {"id": 7, "cat": "فيلم", "name": "الصبر في الملاحات", "actors": "نبيلة عبيد - عزت العلايلي"}, {"id": 8, "cat": "فيلم", "name": "بنات في ورطة", "actors": "صلاح السعدني - سلوي خطاب"}, {"id": 9, "cat": "مسلسل", "name": "البخيل و انا", "actors": "فريد شوقي - كريمة مختار"}, {"id": 10, "cat": "فيلم", "name": "امريكا شيكا بيكا", "actors": "محمد فؤاد"}, {"id": 11, "cat": "مسلسل", "name": "مطلوب عروسة", "actors": "يونس شلبي - احمد بدير"}, {"id": 12, "cat": "فيلم", "name": "احاسيس", "actors": "احمد عزمي  - عبير صبري"}, {"id": 13, "cat": "مسلسل", "name": "احلام الفتي الطائر", "actors": "عادل امام - عمر الحريري"}, {"id": 14, "cat": "اغنية", "name": "رمضان جانا", "actors": "محمد عبد المطلب"}, {"id": 15, "cat": "مسلسل", "name": "الحساب يجمع", "actors": "كريم فهمي - يسرا"}, {"id": 16, "cat": "مسلسل", "name": "اسعاف يونس", "actors": "محمد انور"}, {"id": 17, "cat": "فيلم", "name": "مطاردة غرامية", "actors": "فؤاد المهندس - شويكار"}, {"id": 18, "cat": "فيلم", "name": "اشباح اوروبا", "actors": "هيفاء وهبي - مصطفي خاطر"}, {"id": 19, "cat": "فيلم", "name": "الشقة من حق الزوجة", "actors": "محمود عبد العزيز - معالي زايد"}, {"id": 20, "cat": "فيلم", "name": "بطل من ورق", "actors": "ممدوح عبد العليم - اثار الحكيم"}, {"id": 21, "cat": "مسلسل", "name": "الكبريت الاحمر", "actors": "احمد السعدني - داليا مصطفي"}, {"id": 22, "cat": "مسلسل", "name": "العطار و السبع بنات", "actors": "نور الشريف - ماجدة زكي"}, {"id": 23, "cat": "فيلم", "name": "سنة اولي نصب", "actors": "احمد عز - خالد سليم"}, {"id": 24, "cat": "فيلم", "name": "شقو", "actors": "عمرو يوسف - محمد ممدوح"}, {"id": 25, "cat": "فيلم", "name": "يا عزيزي كلنا لصوص", "actors": "محمود عبد العزيز - ليلي علوي"}, {"id": 26, "cat": "فيلم", "name": "العتبة جزاز", "actors": "فؤاد المهندس - شويكار"}, {"id": 27, "cat": "فيلم", "name": "ملف سامية شعراوي", "actors": "نادية الجندي - فاروق الفيشاوي"}, {"id": 28, "cat": "اغنية", "name": "قادر وتعملها", "actors": "محمد محيي"}, {"id": 29, "cat": "فيلم", "name": "سيدة القصر", "actors": "زكي رستم - فاتن حمامه"}, {"id": 30, "cat": "فيلم", "name": "الوحل", "actors": "نور الشريف - نبيلة عبيد"}, {"id": 31, "cat": "اغنية", "name": "الف ليلة وليلة", "actors": "ام كلثوم"}, {"id": 32, "cat": "فيلم", "name": "قبل زحمة الصيف", "actors": "ماجد الكدواني - هنا شيحة"}, {"id": 33, "cat": "مسلسل", "name": "بيت بابا", "actors": "محمد محمود - انتصار"}, {"id": 34, "cat": "مسلسل", "name": "البحث عن علا", "actors": "هند صبري"}, {"id": 35, "cat": "اغنية", "name": "اه لو تعرف", "actors": "نجاة"}, {"id": 36, "cat": "فيلم", "name": "تزوير في اوراق رسمية", "actors": "محمود عبد العزيز - ميرفت امين"}, {"id": 37, "cat": "فيلم", "name": "عماشة في الادغال", "actors": "فؤاد المهندس - محمد رضا"}, {"id": 38, "cat": "فيلم", "name": "١٠٠٠ مبروك", "actors": "احمد حلمي - محمد فراج"}, {"id": 39, "cat": "اغنية", "name": "عم يا صاحب الجمال", "actors": "احمد عدوية"}, {"id": 40, "cat": "اغنية", "name": "نسيانك صعب اكيد", "actors": "هاني شاكر"}, {"id": 41, "cat": "فيلم", "name": "صايع بحر", "actors": "احمد حلمي - ياسمين عبدالعزيز"}, {"id": 42, "cat": "فيلم", "name": "رغبة متوحشة", "actors": "ناديه الجندي - محمود حميدة"}, {"id": 43, "cat": "فيلم", "name": "يارب ولد", "actors": "فريد شوقي - سمير غانم"}, {"id": 44, "cat": "فيلم", "name": "الهنا اللي انا فيه", "actors": "كريم محمود عبد العزيز - دينا الشربيني"}, {"id": 45, "cat": "اغنية", "name": "بنت السلطان", "actors": "احمد عدوية"}, {"id": 46, "cat": "فيلم", "name": "صراع في النيل", "actors": "رشدي اباظه - عنر الشريف - فاتن حمامه"}, {"id": 47, "cat": "فيلم", "name": "فضيحة في الزمالك", "actors": "عمر الشريف - مريم فخر الدين"}, {"id": 48, "cat": "فيلم", "name": "لا تراجع ولا استسلام", "actors": "احمد مكي - دنيا سمير غانم"}, {"id": 49, "cat": "مسرحية", "name": "اخويا هايص و انا لايص", "actors": "سمير غانم - دلال عبدالعزيز"}, {"id": 50, "cat": "فيلم", "name": "مولد يا دنيا", "actors": "عفاف راضي - محمود ياسين"}, {"id": 51, "cat": "اغنية", "name": "في عشق البنات", "actors": "محمد منير"}, {"id": 52, "cat": "فيلم", "name": "لف ودوران", "actors": "احمد حلمي - دنيا سمير غانم"}, {"id": 53, "cat": "فيلم", "name": "همام في امستردام", "actors": "محمد هنيدي - احمد السقا"}, {"id": 54, "cat": "فيلم", "name": "شاويش نص الليل", "actors": "فريد شوقي - اثار الحكيم"}, {"id": 55, "cat": "فيلم", "name": "دم الغزال", "actors": "نور الشريف - مني زكي"}, {"id": 56, "cat": "فيلم", "name": "حياة او موت", "actors": "رشدي اباظه - يوسف وهبي - عماد حمدي"}, {"id": 57, "cat": "مسلسل", "name": "الزيني بركات", "actors": ""}, {"id": 58, "cat": "فيلم", "name": "قشر البندق", "actors": "حميد الشاعري - سيمون"}, {"id": 59, "cat": "فيلم", "name": "ليلة هنا و سرور", "actors": "محمد امام - ياسمين صبري"}, {"id": 60, "cat": "فيلم", "name": "حامل اللقب", "actors": "هشام ماجد - دينا الشربيني"}, {"id": 61, "cat": "مسلسل", "name": "شهادة معاملة اطفال", "actors": "محمد هنيدي"}, {"id": 62, "cat": "فيلم", "name": "صعيدي في الجامعة الامريكية", "actors": "محمد هنيدي - مني زكي"}, {"id": 63, "cat": "مسلسل", "name": "الحب و اشياء اخري", "actors": "ممدوح عبد العليم - اثار الحكيم"}, {"id": 64, "cat": "فيلم", "name": "الفيل الازرق", "actors": "كريم عبدالعزيز - نيللي كريم"}, {"id": 65, "cat": "فيلم", "name": "فاصل من اللحظات اللذيذة", "actors": "هشام ماجد - هنا الزاهد"}, {"id": 66, "cat": "فيلم", "name": "قنديل ام هاشم", "actors": "امينة رزق - صلاح منصور"}, {"id": 67, "cat": "فيلم", "name": "رمضان مبروك ابو العلمين حمودة", "actors": "محمد هنيدي"}, {"id": 68, "cat": "مسلسل", "name": "بكيزة و زغلول", "actors": "سهير البابلي - اسعاد يونس"}, {"id": 69, "cat": "فيلم", "name": "تيتو", "actors": "احمد السقا - حنان ترك"}, {"id": 70, "cat": "فيلم", "name": "المصلحة", "actors": "احمد عز - زينة"}, {"id": 71, "cat": "فيلم", "name": "الزواج علي الطريقة الحديثة", "actors": "سعاد حسني - حسن يوسف"}, {"id": 72, "cat": "فيلم", "name": "كنغر حبنا", "actors": "رامز جلال - سارة سلامة"}, {"id": 73, "cat": "فيلم", "name": "وكر الملذات", "actors": ""}, {"id": 74, "cat": "فيلم", "name": "تيمور وشفيقة", "actors": "احمد السقا - مني زكي"}, {"id": 75, "cat": "مسرحية", "name": "بودي جارد", "actors": "عادل امام - رغده"}, {"id": 76, "cat": "اغنية", "name": "طبيب جراح", "actors": "چورچ وسوف"}, {"id": 77, "cat": "فيلم", "name": "فرحان ملازم ادم", "actors": "فتحي عبد الوهاب - ياسمين عبد العزيز"}, {"id": 78, "cat": "مسلسل", "name": "خلصانة بشياكة", "actors": "احمد مكي - هشام ماجد"}, {"id": 79, "cat": "فيلم", "name": "انا بضيع يا وديع", "actors": "ايمن قنديل - امجد عابد"}, {"id": 80, "cat": "مسلسل", "name": "و ادرك شهريار الصباح", "actors": "يحيي الفخراني - سماح انور"}, {"id": 81, "cat": "فيلم", "name": "كود ٣٦", "actors": "مصطفى شعبان - مايا نصري"}, {"id": 82, "cat": "فيلم", "name": "الانس و الجن", "actors": "عادل امام - يسرا"}, {"id": 83, "cat": "فيلم", "name": "خالتي فرنسا", "actors": "عبلة كامل - مني زكي"}, {"id": 84, "cat": "فيلم", "name": "زوجتي و الكلب", "actors": "نور الشريف - سعاد حسني"}, {"id": 85, "cat": "مسرحية", "name": "الحادثة", "actors": "اشرف عبدالباقي - عبلة كامل"}, {"id": 86, "cat": "مسلسل", "name": "تحت الوصاية", "actors": "مني زكي - دياب"}, {"id": 87, "cat": "فيلم", "name": "زومبي", "actors": "علي ربيع - حمدي الميرغني"}, {"id": 88, "cat": "فيلم", "name": "كده رضا", "actors": "احمد حلمي - منة شلبي"}, {"id": 89, "cat": "فيلم", "name": "الانسة حنفي", "actors": "اسماعيل يس"}, {"id": 90, "cat": "فيلم", "name": "غزل البنات", "actors": "نجيب الريحاني - ليلي مراد"}, {"id": 91, "cat": "اغنية", "name": "لو سألوني", "actors": "مصطفي قمر"}, {"id": 92, "cat": "فيلم", "name": "الشموع السوداء", "actors": "صالح سليم - نجاة"}, {"id": 93, "cat": "مسلسل", "name": "سوبر ميرو", "actors": "ايمي سمير غانم - حمدي الميرغني"}, {"id": 94, "cat": "فيلم", "name": "مراتي و زوجتي", "actors": "رامز جلال - شيري عادل"}, {"id": 95, "cat": "فيلم", "name": "بلية و دماغه العالية", "actors": "محمد هنيدي - غاده عادل"}, {"id": 96, "cat": "اغنية", "name": "سوبر مان", "actors": "سميرة سعيد"}, {"id": 97, "cat": "مسرحية", "name": "الاباندا", "actors": "محمد هنيدي - دينا - احمد السقا"}, {"id": 98, "cat": "فيلم", "name": "حب في الزنزانة", "actors": "عادل امام - سعاد حسني"}, {"id": 99, "cat": "فيلم", "name": "احترس من الخط", "actors": "عادل امام - لبلبة"}, {"id": 100, "cat": "فيلم", "name": "العارف", "actors": "احمد عز - احمد فهمي"}, {"id": 101, "cat": "فيلم", "name": "فيلم هندي", "actors": "احمد ادم - صلاح عبدالله"}, {"id": 102, "cat": "اغنية", "name": "ما بلاش اللون ده معانا", "actors": "احمد عدويه"}, {"id": 103, "cat": "فيلم", "name": "بداية ونهاية", "actors": "فريد شوقي - عمر الشريف"}, {"id": 104, "cat": "مسلسل", "name": "ستهم", "actors": "روچينا"}, {"id": 105, "cat": "مسلسل", "name": "السوق الحرة", "actors": "محمد ثروت - ويزو"}, {"id": 106, "cat": "اغنية", "name": "اطبطب و ادلع", "actors": "نانسي عجرم"}, {"id": 107, "cat": "مسلسل", "name": "هجمة مرتدة", "actors": "احمد عز - هند صبري"}, {"id": 108, "cat": "مسلسل", "name": "ليلة القبض علي فاطمة", "actors": "فردوس عبد الحميد - فاروق الفيشاوي"}, {"id": 109, "cat": "فيلم", "name": "الحدق يفهم", "actors": "محمود عبدالعزيز - هالة فؤاد"}, {"id": 110, "cat": "مسلسل", "name": "كفر دلهاب", "actors": "يوسف الشريف"}, {"id": 111, "cat": "فيلم", "name": "جواز بقرار جمهوري", "actors": "هاني رمزي - حنان ترك"}, {"id": 112, "cat": "فيلم", "name": "مش انا", "actors": "تامر حسني - حلا شيحة"}, {"id": 113, "cat": "فيلم", "name": "السادة الأفاضل", "actors": "اشرف عبد الباقي - بيومي فؤاد"}, {"id": 114, "cat": "فيلم", "name": "كلب بلدي", "actors": "احمد فهمي - ويزو"}, {"id": 115, "cat": "فيلم", "name": "تك تك بوم", "actors": "محمد سعد - درة"}, {"id": 116, "cat": "فيلم", "name": "سوق المتعة", "actors": "محمود عبدالعزيز - الهام شاهين"}, {"id": 117, "cat": "فيلم", "name": "واحدة بواحدة", "actors": "عادل امام - ميرفت امين"}, {"id": 118, "cat": "فيلم", "name": "الديلر", "actors": "احمد السقا - خالد النبوي"}, {"id": 119, "cat": "فيلم", "name": "جدعان باب الشعرية", "actors": "حسين فهمي - اسعاد يونس - احمد زكي"}, {"id": 120, "cat": "اغنية", "name": "لولا الملامة", "actors": "وردة"}, {"id": 121, "cat": "اغنية", "name": "سلامتها ام حسن", "actors": "احمد عدويه"}, {"id": 122, "cat": "فيلم", "name": "الشيخ چاكسون", "actors": "احمد الفيشاوي"}, {"id": 123, "cat": "مسلسل", "name": "الحشاشين", "actors": "كريم عبد العزيز"}, {"id": 124, "cat": "مسلسل", "name": "في اللا لا لاند", "actors": "دنيا سمير غانم - محمد سلام"}, {"id": 125, "cat": "فيلم", "name": "جوازة توكسيك", "actors": "بيومي فؤاد - ليلي علوي"}, {"id": 126, "cat": "مسرحية", "name": "دو ري مي فاصوليا", "actors": "سمير غانم"}, {"id": 127, "cat": "فيلم", "name": "لصوص لكن ظرفاء", "actors": "احمد مظهر - عادل امام"}, {"id": 128, "cat": "فيلم", "name": "شنبو في المصيدة", "actors": "فؤاد المهندس - شويكار"}, {"id": 129, "cat": "فيلم", "name": "سامي اكسيد الكربون", "actors": "هاني رمزي - درة"}, {"id": 130, "cat": "مسلسل", "name": "دموع في عيون وقحة", "actors": "عادل امام - صلاح قابيل"}, {"id": 131, "cat": "فيلم", "name": "احنا بتوع الاتوبيس", "actors": "عادل امام - عبد المنعم مدبولي"}, {"id": 132, "cat": "اغنية", "name": "عقبالك يوم ميلادك", "actors": "عبد الحليم حافظ"}, {"id": 133, "cat": "فيلم", "name": "حكايات الغريب", "actors": "محمود الجندي - شريف منير"}, {"id": 134, "cat": "مسلسل", "name": "هند و الدكتور نعمان", "actors": "كمال الشناوي - ليزا"}, {"id": 135, "cat": "اغنية", "name": "الواد قلبه بيوجعه", "actors": "بهاء سلطان"}, {"id": 136, "cat": "اغنية", "name": "طير بينا يا قلبي", "actors": "محمد فوزي"}, {"id": 137, "cat": "فيلم", "name": "مواطن ومخبر وحرامي", "actors": "خالد ابو النجا - شعبان عبد الرحيم"}, {"id": 138, "cat": "مسلسل", "name": "مأمون و شركاه", "actors": "عادل امام - لبلبة"}, {"id": 139, "cat": "مسلسل", "name": "الراية البيضاء", "actors": "هشام سليم - جميل راتب"}, {"id": 140, "cat": "فيلم", "name": "خارج علي القانون", "actors": "كريم عبدالعزيز - منة شلبي"}, {"id": 141, "cat": "فيلم", "name": "بره المنهج", "actors": "ماجد الكدواني - روبي"}, {"id": 142, "cat": "فيلم", "name": "حملة فريزر", "actors": "هشام ماجد - شيكو"}, {"id": 143, "cat": "فيلم", "name": "ساعة و نص", "actors": "محمد امام - احمد السعدني"}, {"id": 144, "cat": "فيلم", "name": "سواق الاتوبيس", "actors": "نور الشريف"}, {"id": 145, "cat": "فيلم", "name": "ابراهيم الابيض", "actors": "محمود عبدالعزيز - احمد السقا"}, {"id": 146, "cat": "مسلسل", "name": "انا وانت وبابا في المشمش", "actors": "حسن عابدين - فردوس عبدالحميد"}, {"id": 147, "cat": "فيلم", "name": "زوجة رجل مهم", "actors": "احمد زكي - ميرفت امين"}, {"id": 148, "cat": "فيلم", "name": "٣٦٥ يوم سعادة", "actors": "احمد عز - دنيا سمير غانم"}, {"id": 149, "cat": "مسلسل", "name": "عمر و دياب", "actors": "علي ربيع - مصطفي خاطر"}, {"id": 150, "cat": "فيلم", "name": "المصير", "actors": "نور الشريف - ليلي علوي"}, {"id": 151, "cat": "فيلم", "name": "تسليم اهالي", "actors": "هشام ماجد - دنيا سمير غانم"}, {"id": 152, "cat": "فيلم", "name": "كدبة كل يوم", "actors": "عمرو يوسف - درة"}, {"id": 153, "cat": "مسلسل", "name": "افراج", "actors": "عمرو سعد - حاتم صلاح"}, {"id": 154, "cat": "اغنية", "name": "ونفضل نرقص", "actors": "انغام"}, {"id": 155, "cat": "اغنية", "name": "انا بعشقك", "actors": "ميادة الحناوي"}, {"id": 156, "cat": "اغنية", "name": "كوتي", "actors": "احمد سعد"}, {"id": 157, "cat": "مسلسل", "name": "نصف ربيع الاخر", "actors": "يحيي الفخراني - فادية عبدالغني"}, {"id": 158, "cat": "فيلم", "name": "الانس و النمس", "actors": "محمد هنيدي - منة شلبي"}, {"id": 159, "cat": "فيلم", "name": "السفيرة عزيزة", "actors": "شكري سرحان - سعاد حسني"}, {"id": 160, "cat": "فيلم", "name": "اميرة حبي انا", "actors": "سعاد حسني - حسين فهمي"}, {"id": 161, "cat": "فيلم", "name": "اسف علي الازعاج", "actors": "احمد حلمي - محمود حميدة"}, {"id": 162, "cat": "فيلم", "name": "الشيطانة التي احبتني", "actors": "محمد صبحي - لبلبة"}, {"id": 163, "cat": "اغنية", "name": "يا بيوت السويس", "actors": "محمد حمام"}, {"id": 164, "cat": "اغنية", "name": "تؤمر ع الراس وع العين", "actors": "فريد الاطرش"}, {"id": 165, "cat": "مسلسل", "name": "لعبة ابليس", "actors": "يوسف الشريف - شيري عادل"}, {"id": 166, "cat": "اغنية", "name": "ساعات بشتاق", "actors": "محمد فؤاد"}, {"id": 167, "cat": "مسلسل", "name": "بوابة الحلواني", "actors": "خالد النبوي - سمية الالفي"}, {"id": 168, "cat": "فيلم", "name": "٧ ورقات كوتشينة", "actors": "روبي"}, {"id": 169, "cat": "مسلسل", "name": "امرأة من زمن الحب", "actors": "سميرة احمد - كريم عبد العزيز"}, {"id": 170, "cat": "اغنية", "name": "يا وابور الساعة ١٢", "actors": "ايمان البحر درويش - عفاف راضي"}, {"id": 171, "cat": "اغنية", "name": "قمرين", "actors": "عمرو دياب"}, {"id": 172, "cat": "فيلم", "name": "شيكامارا", "actors": "مي عز الدين - ماجد الكدواني"}, {"id": 173, "cat": "اغنية", "name": "علي بالي", "actors": "عايدة الشاعر"}, {"id": 174, "cat": "اغنية", "name": "سيرة الحب", "actors": "ام كلثوم"}, {"id": 175, "cat": "اغنية", "name": "حرمت احبك", "actors": "وردة"}, {"id": 176, "cat": "فيلم", "name": "يا دنيا يا غرامي", "actors": "ليلي علوي - الهام شاهين"}, {"id": 177, "cat": "فيلم", "name": "ابو العربي", "actors": "هاني رمزي - منة شلبي"}, {"id": 178, "cat": "مسلسل", "name": "بدل الحدوتة ٣", "actors": "دنيا سمير غانم - هشام ماجد"}, {"id": 179, "cat": "مسلسل", "name": "امام الدعاة", "actors": "حسن يوسف"}, {"id": 180, "cat": "فيلم", "name": "ثرثرة فوق النيل", "actors": "احمد رمزي - ماجدة الخطيب"}, {"id": 181, "cat": "فيلم", "name": "محترم الا ربع", "actors": "محمد رجب - احمد زاهر"}, {"id": 182, "cat": "فيلم", "name": "المراهقات", "actors": "ماجدة"}, {"id": 183, "cat": "اغنية", "name": "اللي باعنا خسر دلعنا", "actors": "راغب علامة"}, {"id": 184, "cat": "فيلم", "name": "ثانية واحدة", "actors": "دينا الشربيني - مصطفى خاطر"}, {"id": 185, "cat": "فيلم", "name": "بوبوس", "actors": "عادل امام - يسرا"}, {"id": 186, "cat": "فيلم", "name": "افواه و ارانب", "actors": "فاتن حمامه - فريد شوقي"}, {"id": 187, "cat": "فيلم", "name": "جروب الماميز", "actors": "روبي - محمد ثروت"}, {"id": 188, "cat": "فيلم", "name": "عائلة زيزي", "actors": "فؤاد المهندس - سعاد حسني"}, {"id": 189, "cat": "فيلم", "name": "سبع البرمبة", "actors": "رامز جلال - جميلة عوض"}, {"id": 190, "cat": "مسرحية", "name": "فارس و بني خيبان", "actors": "سمير غانم"}, {"id": 191, "cat": "فيلم", "name": "حسن ومرقص", "actors": "عادل امام - عمر الشريف"}, {"id": 192, "cat": "مسلسل", "name": "ميدتيرم", "actors": "ياسمينا العبد"}, {"id": 193, "cat": "اغنية", "name": "الكدابين", "actors": "شيرين عبدالوهاب"}, {"id": 194, "cat": "فيلم", "name": "الخلبوص", "actors": "محمد رجب - ايمان العاصي"}, {"id": 195, "cat": "اغنية", "name": "الركن البعيد الهادي", "actors": "انغام"}, {"id": 196, "cat": "فيلم", "name": "الغسالة", "actors": "محمود حميدة - احمد حاتم - هنا الزاهد"}, {"id": 197, "cat": "اغنية", "name": "ما خطرتش علي بالك يوم", "actors": "ام كلثوم"}, {"id": 198, "cat": "فيلم", "name": "ابو حلموس", "actors": "نجيب الريحاني - زوزو شكيب"}, {"id": 199, "cat": "اغنية", "name": "حبيبي يا عاشق", "actors": "مدحت صالح"}, {"id": 200, "cat": "مسلسل", "name": "يونس ولد فضة", "actors": "عمرو سعد - ريهام حجاج"}, {"id": 201, "cat": "مسلسل", "name": "عايزة اتجوز", "actors": "هند صبري - سوسن بدر"}, {"id": 202, "cat": "مسلسل", "name": "عباس الابيض في اليوم الاسود", "actors": "يحيي الفخراني - دنيا سمير غانم"}, {"id": 203, "cat": "فيلم", "name": "الرهينة", "actors": "احمد عز - ياسمين عبد العزيز"}, {"id": 204, "cat": "اغنية", "name": "كان طيب", "actors": "عمرو دياب"}, {"id": 205, "cat": "فيلم", "name": "يا انا يا خالتي", "actors": "محمد هنيدي - دنيا سمير غانم"}, {"id": 206, "cat": "فيلم", "name": "سارق الفرح", "actors": "ماجد المصري - لوسي"}, {"id": 207, "cat": "اغنية", "name": "فات المعاد", "actors": "ام كلثوم"}, {"id": 208, "cat": "مسرحية", "name": "باللو", "actors": "اشرف عبد الباقي - صلاح السعدني"}, {"id": 209, "cat": "فيلم", "name": "الانسان يعيش مرة واحدة", "actors": "عادل امام - يسرا"}, {"id": 210, "cat": "فيلم", "name": "قصر الشوق", "actors": "يحيي شاهين - عبد المنعم ابراهيم"}, {"id": 211, "cat": "مسلسل", "name": "حجر جهنم", "actors": "اياد نصار - كندة علوش - شيرين رضا"}, {"id": 212, "cat": "مسلسل", "name": "نسل الاغراب", "actors": "احمد السقا - امير كراره"}, {"id": 213, "cat": "فيلم", "name": "ممنوع الاقتراب او التصوير", "actors": ""}, {"id": 214, "cat": "مسرحية", "name": "راقصة قطاع عام", "actors": "سماح انور - يحيي الفخراني"}, {"id": 215, "cat": "مسرحية", "name": "الواد سيد الشغال", "actors": "عادل امام - عمر الحريري"}, {"id": 216, "cat": "فيلم", "name": "طير في السما", "actors": "ايمان البحر درويش - اثار الحكيم"}, {"id": 217, "cat": "فيلم", "name": "هاتولي راجل", "actors": "احمد الفيشاوي - ايمي سمير غانم"}, {"id": 218, "cat": "اغنية", "name": "تمللي معاك", "actors": "عمرو دياب"}, {"id": 219, "cat": "فيلم", "name": "حماتي قنبلة ذرية", "actors": "اسماعيل يس - ماري منيب"}, {"id": 220, "cat": "فيلم", "name": "امرأة آيلة للسقوط", "actors": "يسرا"}, {"id": 221, "cat": "فيلم", "name": "ورقة شفرة", "actors": "شيكو- هشام ماجد"}, {"id": 222, "cat": "فيلم", "name": "اضحك الصورة تطلع حلوة", "actors": "احمد زكي - مني زكي"}, {"id": 223, "cat": "فيلم", "name": "فيلم ثقافي", "actors": "احمد عيد - احمد رزق"}, {"id": 224, "cat": "اغنية", "name": "عيلة تايهة", "actors": "احمد عدوية"}, {"id": 225, "cat": "فيلم", "name": "عدو المرأة", "actors": "رشدي اباظه - ناديه لطفي"}, {"id": 226, "cat": "فيلم", "name": "مهمة صعبة", "actors": "طارق علام - مجدي كامل"}, {"id": 227, "cat": "مسلسل", "name": "جمال الحريم", "actors": "خالد سليم - نور"}, {"id": 228, "cat": "فيلم", "name": "اصحاب ولا بيزنس", "actors": "مصطفي قمر - هاني سلامه"}, {"id": 229, "cat": "اغنية", "name": "عودوني", "actors": "عمرو دياب"}, {"id": 230, "cat": "فيلم", "name": "جحيم في الهند", "actors": "محمد امام - ياسمين صبري"}, {"id": 231, "cat": "فيلم", "name": "حسن و نعيمة", "actors": ""}, {"id": 232, "cat": "مسرحية", "name": "خشب الورد", "actors": "عبد المنعم مدبولي - محمود عبد العزيز"}, {"id": 233, "cat": "فيلم", "name": "حب و كبرياء", "actors": "محمود يس - نجلاء فتحي"}, {"id": 234, "cat": "فيلم", "name": "واحد تاني", "actors": "احمد حلمي - نور ايهاب"}, {"id": 235, "cat": "فيلم", "name": "استاكوزا", "actors": "احمد زكي - رغدة"}, {"id": 236, "cat": "فيلم", "name": "معبودة الجماهير", "actors": "شادية - عبد الحليم حافظ"}, {"id": 237, "cat": "فيلم", "name": "الشبح", "actors": "احمد عز - زينة"}, {"id": 238, "cat": "فيلم", "name": "الوسادة الخالية", "actors": "عبد الحليم حافظ - لبني عبدالعزيز"}, {"id": 239, "cat": "فيلم", "name": "حرامية في kg2", "actors": "كريم عبد العزيز - حنان ترك"}, {"id": 240, "cat": "فيلم", "name": "اخر ديك في مصر", "actors": "محمد رمضان - مي عمر"}, {"id": 241, "cat": "فيلم", "name": "ميدو مشاكل", "actors": "احمد حلمي - شيرين عبد الوهاب"}, {"id": 242, "cat": "فيلم", "name": "ازاي البنات تحبك", "actors": "هاني سلامة - احمد عيد - سمية الخشاب"}, {"id": 243, "cat": "اغنية", "name": "بيني وبينك خطوة ونص", "actors": "حكيم"}, {"id": 244, "cat": "اغنية", "name": "اشوف فيك يوم", "actors": "عبد الفتاح الجريني"}, {"id": 245, "cat": "اغنية", "name": "بيع قلبك", "actors": "عبد الحليم حافظ"}, {"id": 246, "cat": "مسلسل", "name": "هي كيمياء", "actors": "مصطفي غريب - دياب"}, {"id": 247, "cat": "فيلم", "name": "ع الزيرو", "actors": "محمد رمضان - نيللي كريم"}, {"id": 248, "cat": "فيلم", "name": "كابتن هيما", "actors": "تامر حسني - زينة"}, {"id": 249, "cat": "اغنية", "name": "تفتكريني او تنسيني", "actors": "عمرو دياب"}, {"id": 250, "cat": "فيلم", "name": "يوم مالوش لازمة", "actors": "محمد هنيدي - روبي"}, {"id": 251, "cat": "فيلم", "name": "تمر حنة", "actors": ""}, {"id": 252, "cat": "اغنية", "name": "جانا الهوا", "actors": "عبد الحليم حافظ"}, {"id": 253, "cat": "فيلم", "name": "ولاد رزق", "actors": "احمد عز - عمرو يوسف"}, {"id": 254, "cat": "فيلم", "name": "رمضان فوق البركان", "actors": "عادل امام"}, {"id": 255, "cat": "مسلسل", "name": "شقة فيصل", "actors": "كريم محمود عبد العزيز - ايتن عامر"}, {"id": 256, "cat": "مسلسل", "name": "النهاية", "actors": "يوسف الشريف - عمرو عبدالجليل - سهر الصائغ"}, {"id": 257, "cat": "اغنية", "name": "برج الحوت", "actors": "عمرو دياب"}, {"id": 258, "cat": "مسلسل", "name": "السبع وصايا", "actors": "رانيا يوسف - سوسن بدر"}, {"id": 259, "cat": "مسلسل", "name": "اخت تريز", "actors": "حنان ترك"}, {"id": 260, "cat": "مسرحية", "name": "الصعايدة وصلوا", "actors": "احمد بدير - سوسن بدر"}, {"id": 261, "cat": "مسلسل", "name": "كامل العدد", "actors": "اسعاد يونس - شريف سلامه"}, {"id": 262, "cat": "اغنية", "name": "النهر الخالد", "actors": "محمد عبد الوهاب"}, {"id": 263, "cat": "اغنية", "name": "امل حياتي", "actors": "ام كلثوم"}, {"id": 264, "cat": "فيلم", "name": "مطب صناعي", "actors": "احمد حلمي - نور"}, {"id": 265, "cat": "فيلم", "name": "ياباني اصلي", "actors": "احمد عيد - محمد ثروت"}, {"id": 266, "cat": "فيلم", "name": "خلاويص", "actors": "احمد عيد - ايتن عامر"}, {"id": 267, "cat": "فيلم", "name": "بين القصرين", "actors": "يحيي شاهين - عبد المنعم ابراهيم"}, {"id": 268, "cat": "فيلم", "name": "هروب اضطراري", "actors": "احمد السقا - غاده عادل"}, {"id": 269, "cat": "مسلسل", "name": "بالحجم العائلي", "actors": "يحيي الفخراني - ميرفت امين"}, {"id": 270, "cat": "اغنية", "name": "بص بقي", "actors": "شيرين عبدالوهاب"}, {"id": 271, "cat": "فيلم", "name": "عاشور قلب الاسد", "actors": "عبد السلام النابلسي - زهرة العلا"}, {"id": 272, "cat": "مسلسل", "name": "هوانم جاردن سيتي", "actors": "حسين فهمي - صفية العمري"}, {"id": 273, "cat": "فيلم", "name": "كباريه", "actors": "صلاح عبد الله - دنيا سمير غانم"}, {"id": 274, "cat": "فيلم", "name": "ابو نسب", "actors": "محمد امام - ياسمين صبري"}, {"id": 275, "cat": "مسرحية", "name": "فيما يبدو سرقوا عبده", "actors": "احمد ادم - صلاح عبدالله"}, {"id": 276, "cat": "مسرحية", "name": "انها حقا عائلة محترمة", "actors": "فؤاد المهندس - شويكار"}, {"id": 277, "cat": "فيلم", "name": "بنات حواء", "actors": ""}, {"id": 278, "cat": "اغنية", "name": "بنت الجيران", "actors": "عمر كمال - حسن شاكوش"}, {"id": 279, "cat": "فيلم", "name": "لحظات انوثة", "actors": "علا غانم - چومانا مراد"}, {"id": 280, "cat": "فيلم", "name": "رصيف نمرة ٥", "actors": "فريد شوقي - هدي سلطان"}, {"id": 281, "cat": "فيلم", "name": "عصابة حمادة وتوتو", "actors": "عادل امام - لبلبة"}, {"id": 282, "cat": "فيلم", "name": "الوزير جاي", "actors": "وحيد سيف - احمد بدير"}, {"id": 283, "cat": "فيلم", "name": "جزيرة الشيطان", "actors": "عادل امام - يسرا"}, {"id": 284, "cat": "اغنية", "name": "جرح تاني", "actors": "شيرين عبدالوهاب"}, {"id": 285, "cat": "فيلم", "name": "الرجل الذي فقد ظله", "actors": "ماجدة - صلاح ذو الفقار"}, {"id": 286, "cat": "فيلم", "name": "خالي من الكوليسترول", "actors": "اشرف عبد الباقي - الهام شاهين"}, {"id": 287, "cat": "فيلم", "name": "علي سبايسي", "actors": "حكيم - صلاح عبدالله"}, {"id": 288, "cat": "اغنية", "name": "طلب السماح", "actors": "محمد منير"}, {"id": 289, "cat": "فيلم", "name": "فوزية البرجوازية", "actors": "اسعاد يونس - صلاح السعدني"}, {"id": 290, "cat": "اغنية", "name": "بتلوموني ليه", "actors": "عبد الحليم حافظ"}, {"id": 291, "cat": "فيلم", "name": "حلق حوش", "actors": "ليلي علوي - محمد هنيدي"}, {"id": 292, "cat": "مسلسل", "name": "السيرة الهلالية", "actors": "احمد عبدالعزيز - يوسف داوود"}, {"id": 293, "cat": "اغنية", "name": "كتاب حياتي ياعين", "actors": "حسن الاسمر"}, {"id": 294, "cat": "فيلم", "name": "كلم ماما", "actors": "عباة كامل - منة شلبي"}, {"id": 295, "cat": "مسلسل", "name": "عايشة الدور", "actors": "دنيا سمير غانم"}, {"id": 296, "cat": "مسلسل", "name": "ضد الكسر", "actors": "نيللي كريم - محمد فراج"}, {"id": 297, "cat": "فيلم", "name": "البيضة و الحجر", "actors": "احمد زكي - معالي زايد"}, {"id": 298, "cat": "اغنية", "name": "عم المجال", "actors": "محمود الليثي"}, {"id": 299, "cat": "مسلسل", "name": "عرض وطلب", "actors": "سلمي أبوضيف - سماح انور"}, {"id": 300, "cat": "فيلم", "name": "سمير ابو النيل", "actors": "احمد مكي"}, {"id": 301, "cat": "مسلسل", "name": "فوق مستوى الشبهات", "actors": "يسرا - شيرين رضا"}, {"id": 302, "cat": "مسلسل", "name": "شيخ العرب همام", "actors": "يحيي الفخراني - صابرين"}, {"id": 303, "cat": "مسلسل", "name": "برغم القانون", "actors": "ايمان العاصي - محمد محمود عبدالعزيز"}, {"id": 304, "cat": "فيلم", "name": "حلم عزيز", "actors": "احمد عز - منة شلبي"}, {"id": 305, "cat": "فيلم", "name": "ويجا", "actors": "هاني سلامة - منة شلبي"}, {"id": 306, "cat": "مسلسل", "name": "فن الحرب", "actors": "يوسف الشريف - ريم مصطفى"}, {"id": 307, "cat": "مسلسل", "name": "اللعبة", "actors": "شيكو - هشام ماجد"}, {"id": 308, "cat": "فيلم", "name": "صاحب الادارة بواب العمارة", "actors": "نادية الجندي - صفية العمري"}, {"id": 309, "cat": "مسلسل", "name": "خالتي صفية والدير", "actors": "بوسي - ممدوح عبدالعليم"}, {"id": 310, "cat": "فيلم", "name": "يا تحب يا تقب", "actors": "فاروق الفيشاوي - احمد ادم"}, {"id": 311, "cat": "فيلم", "name": "شبه منحرف", "actors": "رامز جلال - زينة"}, {"id": 312, "cat": "اغنية", "name": "اختياراتي", "actors": "احمد سعد"}, {"id": 313, "cat": "مسلسل", "name": "رحلة المليون", "actors": "محمد صبحي - سعاد نصر"}, {"id": 314, "cat": "مسلسل", "name": "درش", "actors": ""}, {"id": 315, "cat": "فيلم", "name": "رحلة حب", "actors": "محمد فؤاد - احمد حلمي"}, {"id": 316, "cat": "فيلم", "name": "محامي خلع", "actors": "هاني رمزي - داليا البحيري"}, {"id": 317, "cat": "مسلسل", "name": "اهل كايرو", "actors": "خالد الصاوي - رانيا يوسف"}, {"id": 318, "cat": "فيلم", "name": "صاحب المقام", "actors": "اسر يس"}, {"id": 319, "cat": "فيلم", "name": "تماسيح النيل", "actors": ""}, {"id": 320, "cat": "فيلم", "name": "فلاح في الكونجرس", "actors": "شعبان عبد الرحيم"}, {"id": 321, "cat": "فيلم", "name": "السمان و الخريف", "actors": "يحيي شاهين - سعاد حسني"}, {"id": 322, "cat": "فيلم", "name": "الحريفة", "actors": "نور النبوي - احمد غزي - نور ايهاب"}, {"id": 323, "cat": "مسلسل", "name": "دموع صاحبة الجلالة", "actors": "سمير صبري - سهير رمزي"}, {"id": 324, "cat": "فيلم", "name": "خادمة ولكن", "actors": "الهام شاهين - مصطفي فهمي"}, {"id": 325, "cat": "مسلسل", "name": "حرب الجبالي", "actors": "احمد رزق - سوسن بدر"}, {"id": 326, "cat": "فيلم", "name": "خليج نعمة", "actors": "غادة عادل"}, {"id": 327, "cat": "مسلسل", "name": "ارابيسك", "actors": "صلاح السعدني"}, {"id": 328, "cat": "مسلسل", "name": "لعبة وقلبت بجد", "actors": "احمد زاهر - رحمة احمد"}, {"id": 329, "cat": "فيلم", "name": "٣٠ يوم في السجن", "actors": "فريد شوقي"}, {"id": 330, "cat": "اغنية", "name": "هذه ليلتي", "actors": "ام كلثوم"}, {"id": 331, "cat": "فيلم", "name": "اسماعيل يس في متحف الشمع", "actors": "اسماعيل يس"}, {"id": 332, "cat": "فيلم", "name": "حاحا وتفاحة", "actors": "ياسمين عبد العزيز - طلعت زكريا"}, {"id": 333, "cat": "فيلم", "name": "العار", "actors": "نور الشريف - حسين فهمي - محمود عبدالعزيز"}, {"id": 334, "cat": "فيلم", "name": "النبطشي", "actors": "محمود عبدالمغني - مي كساب"}, {"id": 335, "cat": "اغنية", "name": "الراجل ده هيجنني", "actors": "شويكار- فؤاد المهندس"}, {"id": 336, "cat": "مسلسل", "name": "جعفر العمدة", "actors": "محمد رمضان - ايمان العاصي"}, {"id": 337, "cat": "مسلسل", "name": "بنات سوبر مان", "actors": "شيري عادل - بيومي فؤاد"}, {"id": 338, "cat": "فيلم", "name": "البيه البواب", "actors": "احمد زكي - فؤاد المهندس"}, {"id": 339, "cat": "فيلم", "name": "شاومينج", "actors": "بيومي فؤاد - صلاح عبدالله"}, {"id": 340, "cat": "مسرحية", "name": "انتهي الدرس يا غبي", "actors": "محمد صبحي - هناء الشوربجي"}, {"id": 341, "cat": "اغنية", "name": "سلامتك من ال اه", "actors": "كاظم الساهر"}, {"id": 342, "cat": "فيلم", "name": "عمر و سلمي", "actors": "تامر حسني - مي عز الدين"}, {"id": 343, "cat": "فيلم", "name": "خليل بعد التعديل", "actors": "محمود عبد العزيز - ليلي علوي"}, {"id": 344, "cat": "اغنية", "name": "اشكي لمين", "actors": "محمد منير"}, {"id": 345, "cat": "مسرحية", "name": "العالمة باشا", "actors": "سهير البابلي - ابو بكر عزت"}, {"id": 346, "cat": "فيلم", "name": "حكاية في كلمتين", "actors": "ايمان البحر درويش"}, {"id": 347, "cat": "فيلم", "name": "الحموات الفاتنات", "actors": "اسماعيل يس - ماري منيب"}, {"id": 348, "cat": "فيلم", "name": "حدوتة مصرية", "actors": "نور الشريف - محمد منير"}, {"id": 349, "cat": "اغنية", "name": "فاتت جنبنا", "actors": "عبد الحليم حافظ"}, {"id": 350, "cat": "مسلسل", "name": "استاذ و رئيس قسم", "actors": "عادل امام - نجوي ابراهيم"}, {"id": 351, "cat": "فيلم", "name": "مهمة في تل ابيب", "actors": "نادية الجندي"}, {"id": 352, "cat": "فيلم", "name": "السرعة لا تزيد عن صفر", "actors": "احمد بدير - عبلة كامل"}, {"id": 353, "cat": "فيلم", "name": "برا المنهج", "actors": "ماجد الكدواني"}, {"id": 354, "cat": "فيلم", "name": "سمير وشهير وبهير", "actors": "شيكو- هشام ماجد"}, {"id": 355, "cat": "فيلم", "name": "الوان السما السبعة", "actors": "محمود حميدة"}, {"id": 356, "cat": "فيلم", "name": "التجربة الدنماركية", "actors": "عادل امام - نيكول سابا"}, {"id": 357, "cat": "فيلم", "name": "اللعب مع العيال", "actors": "محمد امام - اسماء جلال"}, {"id": 358, "cat": "مسلسل", "name": "لمعي القط", "actors": "محمد امام - تارا عماد - محمد انور"}, {"id": 359, "cat": "فيلم", "name": "طأطأ وريكا وكاظم بيك", "actors": "كمال الشناوي - چالا فهمي"}, {"id": 360, "cat": "فيلم", "name": "سالم ابو اخته", "actors": "محمد رجب - ايتن عامر"}, {"id": 361, "cat": "مسلسل", "name": "تامر و شوقية", "actors": "مي كساب - احمد الفيشاوي"}, {"id": 362, "cat": "مسلسل", "name": "احسن اب", "actors": "علي ربيع"}, {"id": 363, "cat": "فيلم", "name": "اللمبي ٨ جيجا", "actors": "محمد سعد - مي عز الدين"}, {"id": 364, "cat": "مسلسل", "name": "عوالم خفية", "actors": "عادل امام - بشري"}, {"id": 365, "cat": "فيلم", "name": "خير و بركة", "actors": "علي ربيع - محمد عبدالرحمن"}, {"id": 366, "cat": "فيلم", "name": "سيب وانا اسيب", "actors": "احمد السعدني - هنا الزاهد"}, {"id": 367, "cat": "اغنية", "name": "قالولي هان الود عليه", "actors": "محمد عبد الوهاب"}, {"id": 368, "cat": "مسلسل", "name": "اللهم اني صائم", "actors": "مصطفي شعبان - ماجدة زكي"}, {"id": 369, "cat": "فيلم", "name": "لخمة راس", "actors": "احمد رزق - سعد الصغير"}, {"id": 370, "cat": "فيلم", "name": "هي فوضي", "actors": "خالد صالح - منة شلبي"}, {"id": 371, "cat": "فيلم", "name": "عندليب الدقي", "actors": "محمد هنيدي"}, {"id": 372, "cat": "فيلم", "name": "الاخوة الاعداء", "actors": ""}, {"id": 373, "cat": "مسلسل", "name": "للعدالة وجوه كثيرة", "actors": "يحيي الفخراني"}, {"id": 374, "cat": "فيلم", "name": "ضحك ولعب وجد وحب", "actors": "عمرو دياب - يسرا - عمر الشريف"}, {"id": 375, "cat": "فيلم", "name": "علي جنب يا اسطي", "actors": "اشرف عبد الباقي"}, {"id": 376, "cat": "مسرحية", "name": "مدرسة المشاغبين", "actors": "عادل امام - سهير البابلي"}, {"id": 377, "cat": "مسلسل", "name": "اللي مالوش كبير", "actors": "ياسمين عبدالعزيز - احمد العوضي"}, {"id": 378, "cat": "فيلم", "name": "بوحة", "actors": "محمد سعد - مي عز الدين"}, {"id": 379, "cat": "اغنية", "name": "اسف حبيبتي", "actors": "راغب علامة"}, {"id": 380, "cat": "فيلم", "name": "عالم عيال عيال", "actors": "رشدي اباظه - سميرة احمد"}, {"id": 381, "cat": "اغنية", "name": "الفار السندق", "actors": "حماده هلال"}, {"id": 382, "cat": "مسلسل", "name": "اميرة في عابدين", "actors": "سميرة احمد - حنان ترك"}, {"id": 383, "cat": "فيلم", "name": "الحب في طابا", "actors": "هشام عبد الحميد - ممدوح عبدالعليم"}, {"id": 384, "cat": "فيلم", "name": "يا تهدي يا تعدي", "actors": "محمد سلام - أيتن عامر"}, {"id": 385, "cat": "فيلم", "name": "تجيبها كده تجيلها كده هي كده", "actors": "سمير غانم - فاروق الفيشاوي - مديحة كامل"}, {"id": 386, "cat": "اغنية", "name": "صبري عليك طال", "actors": "رجاء بلمليح"}, {"id": 387, "cat": "فيلم", "name": "بوشكاش", "actors": "محمد سعد - زينة"}, {"id": 388, "cat": "مسلسل", "name": "رحلة ابو العلا البشري", "actors": "محمود مرسي - علي الحجار"}, {"id": 389, "cat": "فيلم", "name": "مسجون ترانزيت", "actors": "احمد عز - نور الشريف"}, {"id": 390, "cat": "فيلم", "name": "اربعة في مهمة رسمية", "actors": "احمد زكي - نورا"}, {"id": 391, "cat": "مسلسل", "name": "يوميات زوجة مفروسة", "actors": "داليا البحيري - خالد سرحان"}, {"id": 392, "cat": "فيلم", "name": "جواب اعتقال", "actors": "محمد رمضان - دينا الشربيني"}, {"id": 393, "cat": "اغنية", "name": "كله يرقص", "actors": "حكيم"}, {"id": 394, "cat": "مسرحية", "name": "العسكري الاخضر", "actors": "سيد زيان"}, {"id": 395, "cat": "اغنية", "name": "فيها حاجة حلوة", "actors": ""}, {"id": 396, "cat": "مسلسل", "name": "مزاج الخير", "actors": "مصطفي شعبان"}, {"id": 397, "cat": "اغنية", "name": "انت عارف ليه", "actors": "روبي"}, {"id": 398, "cat": "مسلسل", "name": "يتربي في عزو", "actors": "يحيي الفخراني - كريمة مختار"}, {"id": 399, "cat": "فيلم", "name": "فتاة الاستعراض", "actors": "حسن يوسف - سعاد حسني"}, {"id": 400, "cat": "اغنية", "name": "نمت ننه", "actors": "روبي"}, {"id": 401, "cat": "فيلم", "name": "الانسة ماما", "actors": "ياسمين عبدالعزيز"}, {"id": 402, "cat": "مسلسل", "name": "الخواجة عبد القادر", "actors": "يحيي الفخراني"}, {"id": 403, "cat": "اغنية", "name": "انا قلبي اليك ميال", "actors": ""}, {"id": 404, "cat": "اغنية", "name": "داري العيون", "actors": "محمد فوزي"}, {"id": 405, "cat": "اغنية", "name": "لو كان يرضيك", "actors": "عمرو دياب"}, {"id": 406, "cat": "اغنية", "name": "اسمر يا اسمراني", "actors": "عبد الحليم حافظ"}, {"id": 407, "cat": "مسلسل", "name": "ولي العهد", "actors": "حماده هلال"}, {"id": 408, "cat": "اغنية", "name": "حلو و كداب", "actors": "عبد الحليم حافظ"}, {"id": 409, "cat": "فيلم", "name": "حرب اطاليا", "actors": "احمد السقا - نيللي كريم"}, {"id": 410, "cat": "فيلم", "name": "عصابة عظيمة", "actors": "اسعاد يونس"}, {"id": 411, "cat": "فيلم", "name": "ابو العريف", "actors": "مجدي كامل - ايناس النجار"}, {"id": 412, "cat": "مسلسل", "name": "ربع رومي", "actors": "محمد سلام - مصطفي خاطر"}, {"id": 413, "cat": "فيلم", "name": "قبضة الهلالي", "actors": "ليلي علوي - يوسف"}, {"id": 414, "cat": "فيلم", "name": "كيمو و انتيمو", "actors": "عامر منيب - مي عز الدين"}, {"id": 415, "cat": "اغنية", "name": "اعاتبك", "actors": "محمد محيي"}, {"id": 416, "cat": "فيلم", "name": "كازابلانكا", "actors": "امير كرارة - عمرو عبد الجليل"}, {"id": 417, "cat": "مسلسل", "name": "لاعلي سعر", "actors": "نيللي كريم - احمد فهمي"}, {"id": 418, "cat": "فيلم", "name": "حلاوة روح", "actors": "هيفاء وهبي - محمد لطفي"}, {"id": 419, "cat": "فيلم", "name": "ريستارت", "actors": "تامر حسني"}, {"id": 420, "cat": "مسلسل", "name": "حديث الصباح و المساء", "actors": "ليلي علوي - احمد زاهر- عبلة كامل"}, {"id": 421, "cat": "فيلم", "name": "عفريت ترانزيت", "actors": "بيومي فؤاد - محمد ثروت"}, {"id": 422, "cat": "فيلم", "name": "امبراطورية ميم", "actors": "فاتن حمامة - هشام سليم"}, {"id": 423, "cat": "اغنية", "name": "الاطلال", "actors": "ام كلثوم"}, {"id": 424, "cat": "مسرحية", "name": "عفروتو", "actors": "محمد هنيدي - حسن حسني"}, {"id": 425, "cat": "فيلم", "name": "الاستاذة فاطمة", "actors": "فاتن حمامة"}, {"id": 426, "cat": "فيلم", "name": "ايام السادات", "actors": "احمد زكي - ميرفت امين"}, {"id": 427, "cat": "فيلم", "name": "المرأة و الساطور", "actors": "نبيلة عبيد - ابو بكر عزت"}, {"id": 428, "cat": "مسلسل", "name": "المال و البنون", "actors": "يوسف شعبان - احمد عبدالعزيز"}, {"id": 429, "cat": "فيلم", "name": "السلم و الثعبان", "actors": "هاني سلامة - حلا شيحه"}, {"id": 430, "cat": "مسرحية", "name": "جوز و لوز", "actors": "احمد بدير - سعاد نصر"}, {"id": 431, "cat": "مسلسل", "name": "اهلا بالسكان", "actors": "حسن عابدين"}, {"id": 432, "cat": "فيلم", "name": "انا مش معاهم", "actors": "احمد عيد"}, {"id": 433, "cat": "مسرحية", "name": "اهلا يا دكتور", "actors": "سمير غانم - جورج سيدهم"}, {"id": 434, "cat": "مسرحية", "name": "شاهد ماشفش حاجة", "actors": "عادل امام - عمر الحريري"}, {"id": 435, "cat": "فيلم", "name": "مهمة في فيلم قديم", "actors": "فيفي عبده - احمد فتحي"}, {"id": 436, "cat": "اغنية", "name": "زحمة يا دنيا زحمة", "actors": "احمد عدويه"}, {"id": 437, "cat": "فيلم", "name": "غاوي حب", "actors": "محمد فؤاد - حلا شيحه"}, {"id": 438, "cat": "مسرحية", "name": "هاللو شلبي", "actors": "سعيد صالح - عبد المنعم مدبولي"}, {"id": 439, "cat": "اغنية", "name": "المريلة كحلي", "actors": "محمد منير"}, {"id": 440, "cat": "اغنية", "name": "علي كيفك ميل", "actors": "ايهاب توفيق"}, {"id": 441, "cat": "مسلسل", "name": "ملوك الجدعنة", "actors": "عمرو سعد - مصطفى شعبان"}, {"id": 442, "cat": "فيلم", "name": "امرأة هزت عرش مصر", "actors": "ناديه الجندي - فاروق الفيشاوي"}, {"id": 443, "cat": "مسلسل", "name": "الواد سيد الشحات", "actors": "احمد فهمي - هنا الزاهد"}, {"id": 444, "cat": "فيلم", "name": "ليلي بنت الشاطيء", "actors": "ليلي مراد"}, {"id": 445, "cat": "فيلم", "name": "نقطة رجوع", "actors": "شريف منير - هيدي كرم"}, {"id": 446, "cat": "فيلم", "name": "المجانين في نعيم", "actors": "اسماعيل يس"}, {"id": 447, "cat": "فيلم", "name": "عزبة ادم", "actors": "محمود يس - ماجد الكدواني"}, {"id": 448, "cat": "مسلسل", "name": "عين سحرية", "actors": "عصام عمر - عمرو عبد الجليل"}, {"id": 449, "cat": "اغنية", "name": "انت الحظ", "actors": "عمرو دياب"}, {"id": 450, "cat": "مسلسل", "name": "خيانة عهد", "actors": ""}, {"id": 451, "cat": "فيلم", "name": "حرب كرموز", "actors": "امير كرارة"}, {"id": 452, "cat": "اغنية", "name": "اكدب عليك", "actors": "ورده"}, {"id": 453, "cat": "فيلم", "name": "ارض الخوف", "actors": "احمد زكي"}, {"id": 454, "cat": "فيلم", "name": "رسالة الي الوالي", "actors": "عادل امام - يسرا"}, {"id": 455, "cat": "مسلسل", "name": "يوميات ونيس", "actors": "محمد صبخي - سعاد نصر"}, {"id": 456, "cat": "اغنية", "name": "لا تكذبي", "actors": "نجاة - محمد عبد الوهاب"}, {"id": 457, "cat": "فيلم", "name": "عجميستا", "actors": "خالد ابو النجا - شريف رمزي"}, {"id": 458, "cat": "مسرحية", "name": "العيال كبرت", "actors": "حسن مصطفي - احمد زكي"}, {"id": 459, "cat": "فيلم", "name": "احمد نوتردام", "actors": "رامز جلال - غاده عادل"}, {"id": 460, "cat": "اغنية", "name": "يا ليلة", "actors": "هشام عباس"}, {"id": 461, "cat": "فيلم", "name": "بحبك وانا كمان", "actors": "فارس - ادوارد"}, {"id": 462, "cat": "مسلسل", "name": "جمهورية زفتي", "actors": "ممدوح عبدالعليم - صابرين"}, {"id": 463, "cat": "اغنية", "name": "انا والعذاب و هواك", "actors": "محمد عبد الوهاب"}, {"id": 464, "cat": "فيلم", "name": "عنتر بن شداد", "actors": "فريد شوقي - كوكا"}, {"id": 465, "cat": "فيلم", "name": "احلام هند و كاميليا", "actors": "ليلي علوي - احمد زكي"}, {"id": 466, "cat": "مسلسل", "name": "فرق توقيت", "actors": "تامر حسني - ظافر العابدين"}, {"id": 467, "cat": "فيلم", "name": "نور الدين و البحارة الثلاثة", "actors": "علي الكسار"}, {"id": 468, "cat": "مسلسل", "name": "هبة رجل الغراب", "actors": "ايمي سمير غانم"}, {"id": 469, "cat": "فيلم", "name": "عودة الندلة", "actors": "عبله كامل"}, {"id": 470, "cat": "مسلسل", "name": "بنت من شبرا", "actors": "ليلي علوي - طارق لطفي"}, {"id": 471, "cat": "مسلسل", "name": "حالة عشق", "actors": "مي عز الدين - راندا البحيري"}, {"id": 472, "cat": "فيلم", "name": "خرج ولم يعد", "actors": "يحيي الفخراني - ليلي علوي"}, {"id": 473, "cat": "فيلم", "name": "ادرينالين", "actors": "خالد الصاوي - غاده عبد الرازق"}, {"id": 474, "cat": "اغنية", "name": "عاشق الروح", "actors": "محمد عبد الوهاب"}, {"id": 475, "cat": "مسلسل", "name": "ازمة منتصف العمر", "actors": "ريهام عبدالغفور - رنا رئيس"}, {"id": 476, "cat": "اغنية", "name": "كله علي كله", "actors": "احمد عدوية"}, {"id": 477, "cat": "مسلسل", "name": "ورد على فل وياسمين", "actors": "احمد عبد الوهاب - صبا مبارك"}, {"id": 478, "cat": "فيلم", "name": "حوش اللي وقع منك", "actors": "احمد رزق - بشري"}, {"id": 479, "cat": "فيلم", "name": "ليلة ساخنة", "actors": "نور الشريف - لبلبة"}, {"id": 480, "cat": "فيلم", "name": "اشاعة حب", "actors": "عمر الشريف - سعاد حسني"}, {"id": 481, "cat": "اغنية", "name": "فكروني", "actors": "ام كلثوم"}, {"id": 482, "cat": "فيلم", "name": "الجريمة الضاحكة", "actors": "احمد مظهر - سعاد حسني"}, {"id": 483, "cat": "مسلسل", "name": "حضرة العمدة", "actors": "روبي - احمد رزق"}, {"id": 484, "cat": "مسلسل", "name": "ونوس", "actors": "يحيي الفخراني - هالة صدقي"}, {"id": 485, "cat": "مسلسل", "name": "ومن الذي لا يحب فاطمة", "actors": "احمد عبدالعزيز - شيرين سيف النصر"}, {"id": 486, "cat": "فيلم", "name": "امير البحار", "actors": "محمد هنيدي - شيري عادل"}, {"id": 487, "cat": "فيلم", "name": "غرام في الكرنك", "actors": "محمود رضا - محمد العزبي"}, {"id": 488, "cat": "مسلسل", "name": "سنجل مازر فازر", "actors": "ريهام عبدالغفور - شريف سلامه"}, {"id": 489, "cat": "فيلم", "name": "الممر", "actors": "احمد عز - هند صبري - احمد رزق"}, {"id": 490, "cat": "فيلم", "name": "غرام الاسياد", "actors": "احمد مظهر - لبني عبدالعزيز"}, {"id": 491, "cat": "مسلسل", "name": "عفاريت السيالة", "actors": "احمد الفيشاوي - عبلة كامل"}, {"id": 492, "cat": "مسلسل", "name": "رأفت الهجان", "actors": "محمود عبد العزيز - يسرا"}, {"id": 493, "cat": "اغنية", "name": "تترجي فيا", "actors": "ايهاب توفيق"}, {"id": 494, "cat": "فيلم", "name": "من ٣٠ سنة", "actors": "احمد السقا - مني زكي"}, {"id": 495, "cat": "فيلم", "name": "سمك لبن تمر هندي", "actors": "محمود عبد العزيز - معالي زايد"}, {"id": 496, "cat": "فيلم", "name": "زقاق المدق", "actors": "يوسف شعبان - صلاح قابيل"}, {"id": 497, "cat": "فيلم", "name": "بدور", "actors": "نجلاء فتحي - محمود يس"}, {"id": 498, "cat": "مسلسل", "name": "الناس في كفر عسكر", "actors": "صلاح السعدني - دلال عبدالعزيز"}, {"id": 499, "cat": "مسلسل", "name": "في بيتنا روبوت", "actors": "ليلي زاهر"}, {"id": 500, "cat": "اغنية", "name": "انا مهما كبرت صغير", "actors": "عمرو دياب"}, {"id": 501, "cat": "فيلم", "name": "غرام الافاعي", "actors": "ليلي علوي - هشام عبد الحميد"}, {"id": 502, "cat": "مسرحية", "name": "عبده يتحدي رامبو", "actors": "محمد نجم - محمود القلعاوي"}, {"id": 503, "cat": "مسلسل", "name": "المرسي و البحار", "actors": "يحيي الفخراني - سلوي خطاب"}, {"id": 504, "cat": "اغنية", "name": "قلبي بلاستيك", "actors": "روبي"}, {"id": 505, "cat": "مسلسل", "name": "يا رجال العالم اتحدوا", "actors": "حسين فهمي - حسن حسني"}, {"id": 506, "cat": "مسلسل", "name": "اعلي نسبة مشاهدة", "actors": "سلمي ابو ضيف - ليلي احمد زاهر"}, {"id": 507, "cat": "فيلم", "name": "بين السما و الارض", "actors": "عبد المنعم مدبولي - هند رستم"}, {"id": 508, "cat": "مسلسل", "name": "الفتوة", "actors": "ياسر جلال"}, {"id": 509, "cat": "اغنية", "name": "قارئة الفنجان", "actors": "عبد الحليم حافظ"}, {"id": 510, "cat": "مسرحية", "name": "هالة حبيبتي", "actors": "فؤاد المهندس - دلال عبدالعزيز"}, {"id": 511, "cat": "اغنية", "name": "من حبي فيك يا جاري", "actors": "حورية حسن"}, {"id": 512, "cat": "فيلم", "name": "غريب في بيتي", "actors": "سعاد حسني - نور الشريف"}, {"id": 513, "cat": "فيلم", "name": "برج المدابغ", "actors": "عادل ادهم - يونس شلبي - يسرا"}, {"id": 514, "cat": "اغنية", "name": "لوحة باهتة", "actors": "انغام"}, {"id": 515, "cat": "مسلسل", "name": "نصيبي وقسمتك", "actors": "هاني سلامه - نيكول سابا"}, {"id": 516, "cat": "مسرحية", "name": "رد قرضي", "actors": "اشرف عبد الباقي - ياسمين عبدالعزيز"}, {"id": 517, "cat": "اغنية", "name": "اهو ده اللي صار", "actors": "سيد درويش"}, {"id": 518, "cat": "اغنية", "name": "يا واد يا تقيل", "actors": "سعاد حسني"}, {"id": 519, "cat": "مسلسل", "name": "علي كلاي", "actors": "احمد العوضي - درة"}, {"id": 520, "cat": "اغنية", "name": "اعز الناس", "actors": "تامر حسني"}, {"id": 521, "cat": "فيلم", "name": "حمادة يلعب", "actors": "احمد رزق - صلاح عبدالله"}, {"id": 522, "cat": "اغنية", "name": "حلو المكان", "actors": "تامر حسني"}, {"id": 523, "cat": "مسلسل", "name": "بنات خارقات", "actors": "ايمي سمير غانم - بيومي فؤاد"}, {"id": 524, "cat": "مسلسل", "name": "جراند اوتيل", "actors": "عمرو يوسف - دينا الشربيني"}, {"id": 525, "cat": "مسلسل", "name": "اش اش", "actors": "مي عمر - ماجد المصري"}, {"id": 526, "cat": "فيلم", "name": "التوت و النبوت", "actors": "عزت العلايلي - سمير صبري"}, {"id": 527, "cat": "فيلم", "name": "لامؤاخذة", "actors": "كندة علوش - احمد داش"}, {"id": 528, "cat": "مسلسل", "name": "صاحب السعادة", "actors": "عادل امام - لبلبة"}, {"id": 529, "cat": "فيلم", "name": "ما تيجي نرقص", "actors": "يسرا - عزت ابو عوف"}, {"id": 530, "cat": "فيلم", "name": "عريس من جهة امنية", "actors": "عادل امام - شريف منير"}, {"id": 531, "cat": "فيلم", "name": "بيت النتاش", "actors": ""}, {"id": 532, "cat": "فيلم", "name": "٣٠ يوم في العز", "actors": "احمد عز - دنيا سمير غانم"}, {"id": 533, "cat": "فيلم", "name": "بيبو و بشير", "actors": "اسر ياسين - منة شلبي"}, {"id": 534, "cat": "فيلم", "name": "حظ سعيد", "actors": "احمد عيد - مي كساب"}, {"id": 535, "cat": "اغنية", "name": "انا بعشق البحر", "actors": "محمد منير - نجاة"}, {"id": 536, "cat": "فيلم", "name": "ليه يا بنفسج", "actors": "فاروق الفيشاوي - لوسي"}, {"id": 537, "cat": "اغنية", "name": "انا عايش ومش عايش", "actors": "عمرو دياب"}, {"id": 538, "cat": "فيلم", "name": "سيد العاطفي", "actors": "تامر حسني - عبلة كامل - زينة"}, {"id": 539, "cat": "فيلم", "name": "بيت الروبي", "actors": "كريم عبدالعزيز - كريم محمود عبدالعزيز"}, {"id": 540, "cat": "اغنية", "name": "ماما زمانها جاية", "actors": "محمد فوزي"}, {"id": 541, "cat": "فيلم", "name": "حرامية في تايلاند", "actors": "كريم عبد العزيز - ماجد الكدواني"}, {"id": 542, "cat": "اغنية", "name": "كل عام وانت حبيبتي", "actors": "كاظم الساهر"}, {"id": 543, "cat": "مسلسل", "name": "كيد الحموات", "actors": "ماجدة زكي - هالة صدقي"}, {"id": 544, "cat": "فيلم", "name": "وقفة رجالة", "actors": "سيد رجب - ماجد الكدواني - بيومي فؤاد"}, {"id": 545, "cat": "مسلسل", "name": "خلي بالك من زيزي", "actors": "فؤاد المهندس - سعاد حسني"}, {"id": 546, "cat": "اغنية", "name": "لو بطلنا نحلم نموت", "actors": "محمد منير"}, {"id": 547, "cat": "فيلم", "name": "الدشاش", "actors": "محمد سعد - زينة"}, {"id": 548, "cat": "فيلم", "name": "خيال مأته", "actors": "احمد حلمي"}, {"id": 549, "cat": "اغنية", "name": "السهرة تحلي", "actors": "مدحت صالح"}, {"id": 550, "cat": "فيلم", "name": "الواد محروس بتاع الوزير", "actors": "عادل امام - وفاء عامر"}, {"id": 551, "cat": "مسلسل", "name": "القيصر", "actors": "يوسف الشريف"}, {"id": 552, "cat": "مسلسل", "name": "الضوء الشارد", "actors": "احمد عبد العزيز - سماح انور"}, {"id": 553, "cat": "فيلم", "name": "ارجوك اعطني هذا الدواء", "actors": "نبيله عبيد - محمود عبدالعزيز"}, {"id": 554, "cat": "اغنية", "name": "بالحظ و بالصدف", "actors": "محمد منير"}, {"id": 555, "cat": "فيلم", "name": "من اجل زيكو", "actors": "كريم محمود عبد العزيز - منة شلبي"}, {"id": 556, "cat": "اغنية", "name": "انت عمري", "actors": "ام كلثوم"}, {"id": 557, "cat": "اغنية", "name": "شوفي", "actors": "هشام عباس"}, {"id": 558, "cat": "فيلم", "name": "الجلسة سرية", "actors": "محمود يس - شهيرة - يسرا"}, {"id": 559, "cat": "مسرحية", "name": "حودة كرامة", "actors": "احمد ادم - صلاح عبدالله"}, {"id": 560, "cat": "مسلسل", "name": "ابن حلال", "actors": "محمد رمضان"}, {"id": 561, "cat": "مسلسل", "name": "علي الزيبق", "actors": "فاروق الفيشاوي - ابو بكر عزت"}, {"id": 562, "cat": "مسلسل", "name": "السقوط في بئر سبع", "actors": "صلاح السعدني - اسعاد يونس"}, {"id": 563, "cat": "فيلم", "name": "كلمني شكرا", "actors": "عمرو عبد الجليل - غادة عبد الرازق"}, {"id": 564, "cat": "مسلسل", "name": "سوق الكانتو", "actors": "امير كرارة - مي عز الدين"}, {"id": 565, "cat": "اغنية", "name": "قال ايه بيسألوني", "actors": "وردة"}, {"id": 566, "cat": "فيلم", "name": "خللي بالك من جيرانك", "actors": "عادل امام - لبلبة"}, {"id": 567, "cat": "اغنية", "name": "غلبان", "actors": "اصالة"}, {"id": 568, "cat": "اغنية", "name": "علي قد الشوق", "actors": "عبد الحليم حافظ"}, {"id": 569, "cat": "فيلم", "name": "سيما علي بابا", "actors": "احمد مكي - محمد سلام"}, {"id": 570, "cat": "اغنية", "name": "سحراني", "actors": "ايهاب توفيق"}, {"id": 571, "cat": "مسرحية", "name": "الدخول بالملابس الرسمية", "actors": "ابو بكر عزت - اسعاد يونس"}, {"id": 572, "cat": "مسلسل", "name": "رجل في زمن العولمة", "actors": "صلاح السعدني - هالة صدقي"}, {"id": 573, "cat": "فيلم", "name": "ضد الحكومة", "actors": "احمد زكي - لبلبة"}, {"id": 574, "cat": "مسلسل", "name": "سك علي اخواتك", "actors": "علي ربيع"}, {"id": 575, "cat": "فيلم", "name": "احلام الفتي الطائش", "actors": "رامز جلال - نيللي كريم"}, {"id": 576, "cat": "مسلسل", "name": "ابنائي الاعزاء شكرا", "actors": "عبد المنعم مدبولي - يحيي الفخراني"}, {"id": 577, "cat": "فيلم", "name": "زكي شان", "actors": "احمد حلمي - ياسمين عبد العزيز"}, {"id": 578, "cat": "مسلسل", "name": "الجوارح", "actors": "صفاء ابو السعود - صلاح السعدني"}, {"id": 579, "cat": "فيلم", "name": "بلبل حيران", "actors": "احمد حلمي - زينة"}, {"id": 580, "cat": "اغنية", "name": "الدنيا ريشة ف هوا", "actors": "سعد عبد الوهاب"}, {"id": 581, "cat": "فيلم", "name": "القطط السمان", "actors": ""}, {"id": 582, "cat": "فيلم", "name": "عروسة و جوز عرسان", "actors": "يونس شلبي - اسعاد يونس - سمير غانم"}, {"id": 583, "cat": "فيلم", "name": "عصابة الدكتور عمر", "actors": "مصطفي قمر"}, {"id": 584, "cat": "مسلسل", "name": "اتنين في الصندوق", "actors": "حمدي الميرغني - أوس أوس"}, {"id": 585, "cat": "فيلم", "name": "زوج تحت الطلب", "actors": "عادل امام - فؤاد المهندس"}, {"id": 586, "cat": "مسلسل", "name": "دايما عامر", "actors": "مصطفى شعبان - لبلبة - عمرو عبدالجليل"}, {"id": 587, "cat": "اغنية", "name": "الليلة يا سمرا", "actors": "محمد منير"}, {"id": 588, "cat": "مسرحية", "name": "السكرتير الفني", "actors": "فؤاد المهندس - عادل امام"}, {"id": 589, "cat": "فيلم", "name": "الحفيد", "actors": "نور الشريف - ميرفت امين"}, {"id": 590, "cat": "اغنية", "name": "قلبي وروحي وعمري", "actors": "محمد فؤاد"}, {"id": 591, "cat": "فيلم", "name": "مافيا", "actors": "احمد السقا - مصطفي شعبان"}, {"id": 592, "cat": "مسلسل", "name": "الزوجة اول من يعلم", "actors": "حسين فهمي - صلاح السعدني"}, {"id": 593, "cat": "اغنية", "name": "ودارت الايام", "actors": "ام كلثوم"}, {"id": 594, "cat": "مسلسل", "name": "المداح", "actors": "حمادة هلال"}, {"id": 595, "cat": "فيلم", "name": "علي جثتي", "actors": "احمد حلمي - غادة عادل"}, {"id": 596, "cat": "اغنية", "name": "قلبي عشقها", "actors": "راغب علامة"}, {"id": 597, "cat": "مسلسل", "name": "النوة", "actors": "فردوس عبد الحميد - احمد السقا"}, {"id": 598, "cat": "مسرحية", "name": "حزمني يا", "actors": "فيفي عبده - محمد هنيدي - شريف منير"}, {"id": 599, "cat": "مسلسل", "name": "شربات لوز", "actors": "يسرا"}, {"id": 600, "cat": "فيلم", "name": "نادي الرجال السري", "actors": "كريم عبد العزيز - ماجد الكدواني"}, {"id": 601, "cat": "فيلم", "name": "الايدي الناعمة", "actors": "احمد مظهر - صباح"}, {"id": 602, "cat": "فيلم", "name": "صاحب صاحبه", "actors": "محمد هنيدي - اشرف عبد الباقي"}, {"id": 603, "cat": "اغنية", "name": "يا دلعو", "actors": "عمرو دياب"}, {"id": 604, "cat": "مسلسل", "name": "لام شمسية", "actors": "امينة خليل - احمد صلاح السعدني"}, {"id": 605, "cat": "فيلم", "name": "العذراء و الشعر الابيض", "actors": "نبيلة عبيد - محمود عبد العزيز"}, {"id": 606, "cat": "فيلم", "name": "أيظن", "actors": "مي عز الدين - حسن حسني"}, {"id": 607, "cat": "اغنية", "name": "بنت اكابر", "actors": "أصالة"}, {"id": 608, "cat": "مسلسل", "name": "الوتد", "actors": "هدي سلطان - يوسف شعبان - حنان ترك"}, {"id": 609, "cat": "مسلسل", "name": "فارس بلا جواد", "actors": "محمد صبحي"}, {"id": 610, "cat": "مسلسل", "name": "صابر يا عم صابر", "actors": "فريد شوقي - كريمة مختار"}, {"id": 611, "cat": "مسلسل", "name": "كان ياما كان", "actors": "ماجد الكدواني - يسرا اللوزي"}, {"id": 612, "cat": "فيلم", "name": "كتيبة الاعدام", "actors": "نور الشريف - معالي زايد"}, {"id": 613, "cat": "اغنية", "name": "سيدي وصالك", "actors": "انغام"}, {"id": 614, "cat": "فيلم", "name": "أوقات فراغ", "actors": "احمد حاتم - راندا البحيري"}, {"id": 615, "cat": "مسلسل", "name": "فخر الدلتا", "actors": "احمد رمزي - تارا عبود"}, {"id": 616, "cat": "فيلم", "name": "رغدة متوحشة", "actors": "رامز جلال - ريهام حجاج"}, {"id": 617, "cat": "مسلسل", "name": "ضمير ابلة حكمت", "actors": "سميرة احمد - عبلة كامل"}, {"id": 618, "cat": "فيلم", "name": "اهل الكهف", "actors": "محمد ممدوح - خالد النبوي"}, {"id": 619, "cat": "فيلم", "name": "عاوز حقي", "actors": "هاني رمزي - هند صبري"}, {"id": 620, "cat": "اغنية", "name": "مالهمش في الطيب", "actors": "ايهاب توفيق"}, {"id": 621, "cat": "فيلم", "name": "حرام الجسد", "actors": "ناهد السباعي - احمد عبدالله محمود"}, {"id": 622, "cat": "اغنية", "name": "الا فراق الاحباب", "actors": "نجاة"}, {"id": 623, "cat": "فيلم", "name": "الماء و الخضرة والوجه الحسن", "actors": "ليلي علوي - منة شلبي"}, {"id": 624, "cat": "اغنية", "name": "اه يا واد يا اسكندراني", "actors": "مصطفي قمر"}, {"id": 625, "cat": "اغنية", "name": "احنا معلمين", "actors": "احمد عدويه"}, {"id": 626, "cat": "فيلم", "name": "اوعي وشك", "actors": "احمد رزق - احمد عيد"}, {"id": 627, "cat": "فيلم", "name": "المنسي", "actors": "عادل امام - يسرا"}, {"id": 628, "cat": "فيلم", "name": "عزبة الصفيح", "actors": "ناديه الجندي"}, {"id": 629, "cat": "اغنية", "name": "يوم تلات", "actors": "عمرو دياب"}, {"id": 630, "cat": "فيلم", "name": "مين فينا الحرامي", "actors": "عادل امام - شريهان"}, {"id": 631, "cat": "فيلم", "name": "فضل ونعمة", "actors": "ماجد الكدواني - هند صبري"}, {"id": 632, "cat": "مسلسل", "name": "منتهي الصلاحية", "actors": ""}, {"id": 633, "cat": "اغنية", "name": "زي الهوا", "actors": "عبد الحليم حافظ"}, {"id": 634, "cat": "اغنية", "name": "اخاصمك اه", "actors": "نانسي عجرم"}, {"id": 635, "cat": "فيلم", "name": "سلامة في خير", "actors": "نجيب الريحاني - حسين رياض"}, {"id": 636, "cat": "مسلسل", "name": "البرنس", "actors": "محمد رمضان - احمد زاهر"}, {"id": 637, "cat": "مسلسل", "name": "جروب الماميز", "actors": "روبي - يسرا اللوزي"}, {"id": 638, "cat": "مسلسل", "name": "حواري بوخاريست", "actors": "امير كرارة - مي سليم"}, {"id": 639, "cat": "مسلسل", "name": "كارثة طبيعية", "actors": "محمد سلام - جهاد حسام الدين"}, {"id": 640, "cat": "فيلم", "name": "اخواته البنات", "actors": "محمد امام - محمد سلام"}, {"id": 641, "cat": "اغنية", "name": "مش هتنازل عنك ابدا", "actors": "سميرة سعيد"}, {"id": 642, "cat": "اغنية", "name": "سألوني الناس", "actors": "فيروز"}, {"id": 643, "cat": "مسلسل", "name": "الرحايا", "actors": "نور الشريف"}, {"id": 644, "cat": "فيلم", "name": "خيانة مشروعة", "actors": "هاني سلامة"}, {"id": 645, "cat": "فيلم", "name": "حتي لا يطير الدخان", "actors": "عادل امام - سهير رمزي"}, {"id": 646, "cat": "مسلسل", "name": "سيد الناس", "actors": "عمرو سعد - احمد زاهر"}, {"id": 647, "cat": "اغنية", "name": "اعطني الناي وغني", "actors": "فيروز"}, {"id": 648, "cat": "فيلم", "name": "الدنيا علي جناح يمامة", "actors": "محمود عبدالعزيز - ميرفت امين"}, {"id": 649, "cat": "مسلسل", "name": "الجماعة", "actors": "اياد نصار"}, {"id": 650, "cat": "فيلم", "name": "سيداتي انساتي", "actors": "محمود عبدالعزيز - معالي زايد"}, {"id": 651, "cat": "مسرحية", "name": "بهلول في اسطنبول", "actors": "سمير غانم - الهام شاهين"}, {"id": 652, "cat": "اغنية", "name": "مابحبش حد الا انت", "actors": "اصالة"}, {"id": 653, "cat": "مسلسل", "name": "ابو العروسة", "actors": "سيد رجب - سوسن بدر"}, {"id": 654, "cat": "مسرحية", "name": "عش المجانين", "actors": "محمد نجم - حسن عابدين"}, {"id": 655, "cat": "فيلم", "name": "الاراجوز", "actors": "عمر الشريف - ميرفت امين"}, {"id": 656, "cat": "فيلم", "name": "بئر الخيانة", "actors": "نور الشريف - هدي رمزي"}, {"id": 657, "cat": "مسلسل", "name": "حارة اليهود", "actors": "ريهام عبدالغفور - اياد نصار"}, {"id": 658, "cat": "فيلم", "name": "مستر كاراتيه", "actors": "احمد زكي"}, {"id": 659, "cat": "فيلم", "name": "صرخة نملة", "actors": "عمرو عبد الجليل - رانيا يوسف"}, {"id": 660, "cat": "فيلم", "name": "الطوق و الاسورة", "actors": "عزت العلايلي - شريهان"}, {"id": 661, "cat": "اغنية", "name": "بساط الريح", "actors": "فريد الاطرش"}, {"id": 662, "cat": "مسلسل", "name": "جحا المصري", "actors": "يحيى الفخراني - سعاد نصر"}, {"id": 663, "cat": "فيلم", "name": "بلطية العايمة", "actors": "عبلة كامل"}, {"id": 664, "cat": "فيلم", "name": "ارض النفاق", "actors": "فؤاد المهندس - شويكار"}, {"id": 665, "cat": "فيلم", "name": "زنقة ستات", "actors": "حسن الرداد - ايمي سمير غانم"}, {"id": 666, "cat": "فيلم", "name": "دكان شحاتة", "actors": "عمرو عبد الجليل - عمرو سعد"}, {"id": 667, "cat": "مسلسل", "name": "فرقة ناجي عطا الله", "actors": "عادل امام"}, {"id": 668, "cat": "مسلسل", "name": "كلهم بيحبوا مودي", "actors": "ياسر جلال"}, {"id": 669, "cat": "فيلم", "name": "و بالوالدين احسانا", "actors": "فريد شوقي - سهير رمزي"}, {"id": 670, "cat": "فيلم", "name": "قضية عم احمد", "actors": "فريد شوقي - فاروق الفيشاوي"}, {"id": 671, "cat": "فيلم", "name": "ابن القنصل", "actors": "خالد صالح - احمد السقا"}, {"id": 672, "cat": "اغنية", "name": "ماتفوتنيش انا وحدي", "actors": "سيد مكاوي"}, {"id": 673, "cat": "فيلم", "name": "السادة الرجال", "actors": "محمود عبد العزيز - معالي زايد"}, {"id": 674, "cat": "فيلم", "name": "الراعي و النساء", "actors": "احمد زكي - سعاد حسني"}, {"id": 675, "cat": "فيلم", "name": "درس خصوصي", "actors": "حلا شيحة - حسن حسني"}, {"id": 676, "cat": "مسلسل", "name": "العتاولة", "actors": "احمد السقا - طارق لطفي"}, {"id": 677, "cat": "فيلم", "name": "امهات في المنفي", "actors": "عادل امام - ماجدة الخطيب - اسعاد يونس"}, {"id": 678, "cat": "اغنية", "name": "جوز ولا فرد", "actors": "احمد عدويه"}, {"id": 679, "cat": "فيلم", "name": "شمس الزناتي", "actors": "عادل امام - سوسن بدر"}, {"id": 680, "cat": "فيلم", "name": "شعبان الفارس", "actors": "احمد ادم"}, {"id": 681, "cat": "مسلسل", "name": "زلزال", "actors": "محمد رمضان - هنادي مهنا"}, {"id": 682, "cat": "مسلسل", "name": "غرفة 207", "actors": "محمد فراج - ريهام عبدالغفور"}, {"id": 683, "cat": "فيلم", "name": "هنا القاهرة", "actors": "محمد صبحي - سعاد نصر"}, {"id": 684, "cat": "فيلم", "name": "لعبة الست", "actors": "نجيب الريحاني"}, {"id": 685, "cat": "اغنية", "name": "سكة السلامة", "actors": "امال ماهر"}, {"id": 686, "cat": "اغنية", "name": "زي ما هي حبها", "actors": "مدحت صالح"}, {"id": 687, "cat": "مسلسل", "name": "عائلة الحاج متولي", "actors": "نور الشريف - سمية الخشاب"}, {"id": 688, "cat": "اغنية", "name": "شباكنا ستايره حرير", "actors": "شادية"}, {"id": 689, "cat": "مسلسل", "name": "نعمة الافوكاتو", "actors": "مي عمر"}, {"id": 690, "cat": "مسلسل", "name": "الانسة فرح", "actors": "رانيا يوسف - اسماء ابو اليزيد"}, {"id": 691, "cat": "مسلسل", "name": "هربانة منها", "actors": "ياسمين عبدالعزيز - مصطفى خاطر"}, {"id": 692, "cat": "اغنية", "name": "كان عندك حق", "actors": "عمرو دياب"}, {"id": 693, "cat": "فيلم", "name": "الحفلة", "actors": "احمد عز - روبي"}, {"id": 694, "cat": "فيلم", "name": "خائفة من شيء ما", "actors": "رشدي اباظه - مريم فخر الدين"}, {"id": 695, "cat": "فيلم", "name": "فتاة المصنع", "actors": "ياسمين رئيس - هاني عادل"}, {"id": 696, "cat": "اغنية", "name": "الوتر الحساس", "actors": "شيرين عبد الوهاب"}, {"id": 697, "cat": "فيلم", "name": "قرمط بيتمرمط", "actors": "احمد ادم"}, {"id": 698, "cat": "فيلم", "name": "عسكر في المعسكر", "actors": "محمد هنيدي - ماجد الكدواني"}, {"id": 699, "cat": "فيلم", "name": "ملاكي اسكندرية", "actors": "احمد عز - خالد صالح - غادة عادل"}, {"id": 700, "cat": "مسرحية", "name": "حكيم عيون", "actors": "علاء ولي الدين - احمد حلمي"}, {"id": 701, "cat": "مسرحية", "name": "روحية اتخطفت", "actors": "فؤاد المهندس - شويكار"}, {"id": 702, "cat": "اغنية", "name": "انت معلم", "actors": "سعد لمجرد"}, {"id": 703, "cat": "اغنية", "name": "الناجح يرفع ايده", "actors": "عبد الحليم حافظ"}, {"id": 704, "cat": "اغنية", "name": "عودت عيني", "actors": "ام كلثوم"}, {"id": 705, "cat": "فيلم", "name": "الهوي سلطان", "actors": "احمد داوود - منة شلبي"}, {"id": 706, "cat": "مسلسل", "name": "اوبرا عايدة", "actors": "يحيي الفخراني - حنان ترك"}, {"id": 707, "cat": "فيلم", "name": "اه يا ليل يا زمن", "actors": "وردة - رشدي اباظه"}, {"id": 708, "cat": "مسلسل", "name": "فاتن امل حربي", "actors": "نيللي كريم - شريف سلامة"}, {"id": 709, "cat": "اغنية", "name": "تؤام روحي", "actors": "راغب علامة"}, {"id": 710, "cat": "فيلم", "name": "صنع في مصر", "actors": "احمد حلمي - ياسمين رئيس"}, {"id": 711, "cat": "اغنية", "name": "كوكب تاني", "actors": "مدحت صالح"}, {"id": 712, "cat": "اغنية", "name": "حاول تفتكرني", "actors": "عبد الحليم حافظ"}, {"id": 713, "cat": "مسلسل", "name": "جبل الحلال", "actors": "محمود عبدالعزيز"}, {"id": 714, "cat": "فيلم", "name": "مذكرات مراهقة", "actors": "احمد عز - هند صبري"}, {"id": 715, "cat": "اغنية", "name": "اما براوة", "actors": "نجاة الصغيرة - حسين الجسمي"}, {"id": 716, "cat": "اغنية", "name": "ما بلاش", "actors": "محمد حماقي"}, {"id": 717, "cat": "مسرحية", "name": "واحد لمون والتاني مجنون", "actors": "محمد نجم - سيد زيان"}, {"id": 718, "cat": "مسلسل", "name": "وننسي اللي كان", "actors": "ياسمين عبدالعزيز - كريم فهمي"}, {"id": 719, "cat": "مسرحية", "name": "ماما امريكا", "actors": "محمد صبحي - هناء الشوربجي"}, {"id": 720, "cat": "مسرحية", "name": "ربنا يخلي جمعة", "actors": "احمد ادم - صلاح عبدالله"}, {"id": 721, "cat": "مسلسل", "name": "محمود المصري", "actors": "محمود عبدالعزيز"}, {"id": 722, "cat": "فيلم", "name": "عصر القوة", "actors": "نادية الجندي"}, {"id": 723, "cat": "فيلم", "name": "افريكانو", "actors": "احمد السقا - مني زكي"}, {"id": 724, "cat": "فيلم", "name": "غبي منه فيه", "actors": "هاني رمزي - نيللي كريم"}, {"id": 725, "cat": "اغنية", "name": "اساميك الكتيرة", "actors": "انغام"}, {"id": 726, "cat": "مسرحية", "name": "علشان خاطر عيونك", "actors": "فؤاد المهندس - شريهان"}, {"id": 727, "cat": "فيلم", "name": "معلش يا زهر", "actors": "شادية - زكي رستم"}, {"id": 728, "cat": "فيلم", "name": "تصبح علي خير", "actors": ""}, {"id": 729, "cat": "مسلسل", "name": "ساحرة الجنوب", "actors": "حورية فرغلي"}, {"id": 730, "cat": "مسلسل", "name": "حدائق الشيطان", "actors": "جمال سليمان - سميه الخشاب"}, {"id": 731, "cat": "فيلم", "name": "عنتر وبيسة", "actors": "محمد لطفي - امينة"}, {"id": 732, "cat": "مسلسل", "name": "بدون ذكر اسماء", "actors": "روبي - احمد الفيشاوي"}, {"id": 733, "cat": "اغنية", "name": "مهما يحاولوا يطفوا الشمس", "actors": "ميادة الحناوي"}, {"id": 734, "cat": "فيلم", "name": "لص بغداد", "actors": "محمد امام - ياسمين رئيس"}, {"id": 735, "cat": "فيلم", "name": "الناصر صلاح الدين", "actors": "احمد مظهر - نادية لطفي"}, {"id": 736, "cat": "فيلم", "name": "معلش احنا بنتبهدل", "actors": "احمد ادم"}, {"id": 737, "cat": "مسلسل", "name": "الحقيقة و السراب", "actors": "مي عز الدين - احمد زاهر"}, {"id": 738, "cat": "مسلسل", "name": "بطلوع الروح", "actors": "منة شلبي - احمد السعدني"}, {"id": 739, "cat": "فيلم", "name": "السفارة في العمارة", "actors": "عادل امام - داليا البحيري"}, {"id": 740, "cat": "فيلم", "name": "بدل فاقد", "actors": "احمد عز - منة شلبي"}, {"id": 741, "cat": "فيلم", "name": "عودة الابن الضال", "actors": "هشام سليم - ماجدة الرومي"}, {"id": 742, "cat": "فيلم", "name": "اكس مراتي", "actors": "هشام ماجد - محمد ممدوح"}, {"id": 743, "cat": "فيلم", "name": "القرموطي في مهمة سرية", "actors": "احمد ادم"}, {"id": 744, "cat": "فيلم", "name": "لقاء في شهر العسل", "actors": "ايمان البحر درويش - الهام شاهين"}, {"id": 745, "cat": "فيلم", "name": "احلي الاوقات", "actors": "حنان ترك :- منة شلبي"}, {"id": 746, "cat": "فيلم", "name": "زمن حاتم زهران", "actors": "نور الشريف - بوسي"}, {"id": 747, "cat": "فيلم", "name": "حملة فرعون", "actors": "عمرو سعد - روبي - محمود عبد المغني"}, {"id": 748, "cat": "فيلم", "name": "الرجل الابيض المتوسط", "actors": "احمد ادم - سمية الخشاب"}, {"id": 749, "cat": "فيلم", "name": "حواء الساعة ١٢", "actors": ""}, {"id": 750, "cat": "مسلسل", "name": "رانيا و سكينة", "actors": "روبي - مي عمر"}, {"id": 751, "cat": "فيلم", "name": "تراب الماس", "actors": "اسر يس - ماجد الكدواني"}, {"id": 752, "cat": "مسلسل", "name": "شارع عبد العزيز", "actors": "عمرو سعد"}, {"id": 753, "cat": "فيلم", "name": "الحياة منتهي اللذة", "actors": "حنان ترك - منة شلبي"}, {"id": 754, "cat": "اغنية", "name": "حكاية كل عاشق", "actors": "هاني شاكر"}, {"id": 755, "cat": "فيلم", "name": "اسكندرية كمان وكمان", "actors": "يسرا - يوسف شاهين"}, {"id": 756, "cat": "فيلم", "name": "غرام وانتقام", "actors": "اسمهان - يوسف وهبي"}, {"id": 757, "cat": "فيلم", "name": "التعويذة", "actors": "عزت العلايلي - يسرا"}, {"id": 758, "cat": "فيلم", "name": "رشة جريئة", "actors": "ياسمين عبد العزيز - اشرف عبد الباقي"}, {"id": 759, "cat": "اغنية", "name": "خبر عاجل", "actors": "احمد سعد"}, {"id": 760, "cat": "فيلم", "name": "جوازة ميري", "actors": "ياسمين عبدالعزيز"}, {"id": 761, "cat": "مسلسل", "name": "سابع جار", "actors": "دلال عبد العزيز - شيرين"}, {"id": 762, "cat": "اغنية", "name": "قدام مرايتها", "actors": "عمرو دياب"}, {"id": 763, "cat": "مسلسل", "name": "اشغال شقة جدا", "actors": "هشام ماجد - اسماء جلال"}, {"id": 764, "cat": "فيلم", "name": "محاكمة علي بابا", "actors": "يحيي الفخراني - اسعاد يونس"}, {"id": 765, "cat": "مسلسل", "name": "عشم ابليس", "actors": "عمرو يوسف - دينا الشربيني"}, {"id": 766, "cat": "فيلم", "name": "سمع هس", "actors": "ممدوح عبد العليم - ليلي علوي"}, {"id": 767, "cat": "فيلم", "name": "جعلتني مجرما", "actors": "احمد حلمي - غاده عادل"}, {"id": 768, "cat": "مسلسل", "name": "الاسطورة", "actors": "محمد رمضان - ياسمين صبري - مي عمر"}, {"id": 769, "cat": "فيلم", "name": "في الصيف لازم نحب", "actors": "نور الشريف - مديحة كامل"}, {"id": 770, "cat": "مسرحية", "name": "وجهة نظر", "actors": "محمد صبحي - عبلة كامل"}, {"id": 771, "cat": "فيلم", "name": "صباحو كدب", "actors": "احمد ادم"}, {"id": 772, "cat": "فيلم", "name": "مقلب حرامية", "actors": "صلاح عبد الله - محمود عبد المغني"}, {"id": 773, "cat": "مسلسل", "name": "ذئاب الجبل", "actors": "احمد عبد العزيز - سماح انور"}, {"id": 774, "cat": "اغنية", "name": "شنطة سفر", "actors": "انغام"}, {"id": 775, "cat": "اغنية", "name": "زوروني كل سنة مرة", "actors": "ايمان البحر درويش"}, {"id": 776, "cat": "مسلسل", "name": "هي و دافنشي", "actors": "ليلي علوي - خالد الصاوي"}, {"id": 777, "cat": "مسلسل", "name": "نص الشعب اسمه محمد", "actors": ""}, {"id": 778, "cat": "اغنية", "name": "بيقولولي توبي", "actors": "صباح"}, {"id": 779, "cat": "فيلم", "name": "هاللو امريكا", "actors": "عادل امام - شرين"}, {"id": 780, "cat": "مسلسل", "name": "فكرة بمليون جنيه", "actors": "علي ربيع - صابرين"}, {"id": 781, "cat": "فيلم", "name": "جائنا البيان التالي", "actors": "محمد هنيدي - حنان ترك"}, {"id": 782, "cat": "مسلسل", "name": "العميل ١٠٠١", "actors": "مصطفي شعبان - نيللي كريم"}, {"id": 783, "cat": "فيلم", "name": "سهر الليالي", "actors": "احمد حلمي - مني زكي"}, {"id": 784, "cat": "اغنية", "name": "ربك لما يريد", "actors": "محمد منير"}, {"id": 785, "cat": "مسلسل", "name": "الشهد و الدموع", "actors": "يوسف شعبان - عفاف شعيب"}, {"id": 786, "cat": "فيلم", "name": "الحرامي و العبيط", "actors": "خالد صالح - خالد الصاوي"}, {"id": 787, "cat": "اغنية", "name": "الناس الرايقة", "actors": "رامي عياش - احمد عدوية"}, {"id": 788, "cat": "فيلم", "name": "كيرة و الجن", "actors": "كريم عبد العزيز - هند صبري"}, {"id": 789, "cat": "فيلم", "name": "جيم اوڤر", "actors": ""}, {"id": 790, "cat": "فيلم", "name": "كراكون في الشارع", "actors": "عادل امام - يسرا"}, {"id": 791, "cat": "فيلم", "name": "مستر اند مسز عويس", "actors": "حمادة هلال - بشري"}, {"id": 792, "cat": "اغنية", "name": "بيت العز يا بيتنا", "actors": "فايزة احمد"}, {"id": 793, "cat": "مسلسل", "name": "ساكن قصادي", "actors": "عمر الحريري - محمد رضا - سناء جميل"}, {"id": 794, "cat": "فيلم", "name": "عودة اخطر رجل في العالم", "actors": "فؤاد المهندس - ميرفت امين"}, {"id": 795, "cat": "فيلم", "name": "العتبة الخضراء", "actors": "اسماعيل يس - صباح"}, {"id": 796, "cat": "مسلسل", "name": "حكيم باشا", "actors": "مصطفي شعبان - سهر الصائغ"}, {"id": 797, "cat": "فيلم", "name": "احكي يا شهرزاد", "actors": "مني زكي"}, {"id": 798, "cat": "مسلسل", "name": "ريح المدام", "actors": "احمد فهمي - اكرم حسني - مي عمر"}, {"id": 799, "cat": "فيلم", "name": "عمارة يعقوبيان", "actors": "عادل امام - خالد الصاوي"}, {"id": 800, "cat": "فيلم", "name": "احمر شفايف", "actors": "نجيب الريحاني - سامية جمال"}, {"id": 801, "cat": "فيلم", "name": "امير الظلام", "actors": "عادل امام - شيرين سيف النصر"}, {"id": 802, "cat": "فيلم", "name": "اعز اصحاب", "actors": "سومة - احمد السعدني"}, {"id": 803, "cat": "مسلسل", "name": "ب ١٠٠ وش", "actors": "نيللي كريم - اسر ياسين"}, {"id": 804, "cat": "اغنية", "name": "انا قلبي مساكن شعبية", "actors": "محمد منير"}, {"id": 805, "cat": "فيلم", "name": "عروس النيل", "actors": "رشدي اباظه - لبني عبدالعزيز"}, {"id": 806, "cat": "مسرحية", "name": "عروسة تجنن", "actors": "اسعاد يونس - يوسف شعبان"}, {"id": 807, "cat": "مسلسل", "name": "جزيرة غمام", "actors": "طارق لطفي - احمد امين"}, {"id": 808, "cat": "اغنية", "name": "حالة خاصة جدا", "actors": "انغام"}, {"id": 809, "cat": "مسلسل", "name": "عفاريت عدلي علام", "actors": "عادل امام - غادة عادل"}, {"id": 810, "cat": "اغنية", "name": "وهي عاملة ايه دلوقت", "actors": "عمرو دياب"}, {"id": 811, "cat": "اغنية", "name": "سكة العاشقين", "actors": "مصطفي قمر"}, {"id": 812, "cat": "مسلسل", "name": "شرف فتح الباب", "actors": "يحيي الفخراني - هالة فاخر"}, {"id": 813, "cat": "اغنية", "name": "عود البطل", "actors": "حسن شاكوش - عمر كمال"}, {"id": 814, "cat": "فيلم", "name": "امير الدهاء", "actors": "فريد شوقي"}, {"id": 815, "cat": "فيلم", "name": "بين الاطلال", "actors": "فاتن حمامة - عماد حمدي"}, {"id": 816, "cat": "فيلم", "name": "علي بيه مظهر", "actors": "محمد صبحي - سمية الالفي"}, {"id": 817, "cat": "فيلم", "name": "جحيم تحت الماء", "actors": "ليلي علوي - سمير صبري"}, {"id": 818, "cat": "مسلسل", "name": "لا ترد ولا تستبدل", "actors": "رضوي الشربيني - احمد السعدني"}, {"id": 819, "cat": "اغنية", "name": "كامل الاوصاف", "actors": "عبد الحليم حافظ"}, {"id": 820, "cat": "اغنية", "name": "زيديني عشقا", "actors": "كاظم الساهر"}, {"id": 821, "cat": "فيلم", "name": "لحم رخيص", "actors": "الهام شاهين"}, {"id": 822, "cat": "فيلم", "name": "اه من حواء", "actors": "رشدي اباظه - لبني عبدالعزيز"}, {"id": 823, "cat": "مسلسل", "name": "البحار مندي", "actors": "يحيى الفخراني"}, {"id": 824, "cat": "مسلسل", "name": "نسر الصعيد", "actors": "محمد رمضان"}, {"id": 825, "cat": "مسلسل", "name": "نيللي و شريهان", "actors": "دنيا سمير غانم - ايمي سمير غانم"}, {"id": 826, "cat": "فيلم", "name": "الطريق الي ايلات", "actors": "عزت العلايلي - نبيل الحلفاوي"}, {"id": 827, "cat": "فيلم", "name": "الحرب العالمية الثالثة", "actors": "احمد فهمي - بيومي فؤاد - شيكو"}, {"id": 828, "cat": "مسلسل", "name": "نجيب زاهي زركش", "actors": "يحيي الفخراني - هالة فاخر"}, {"id": 829, "cat": "فيلم", "name": "الكلام علي ايه", "actors": "احمد حاتم - اية سماحه"}, {"id": 830, "cat": "فيلم", "name": "اسماعيلية رايح جاي", "actors": "محمد فؤاد - محمد هنيدي"}, {"id": 831, "cat": "فيلم", "name": "بنتين من مصر", "actors": "صبا مبارك - زينة"}, {"id": 832, "cat": "اغنية", "name": "اه يا اسمراني اللون", "actors": "شاديه"}, {"id": 833, "cat": "فيلم", "name": "جاي في السريع", "actors": "ماجد الكدواني"}, {"id": 834, "cat": "اغنية", "name": "انا مش بتاعة الكلام ده", "actors": "شيرين عبدالوهاب"}, {"id": 835, "cat": "فيلم", "name": "عيال حبيبة", "actors": "رامز جلال - حماده هلال"}, {"id": 836, "cat": "فيلم", "name": "المشبوه", "actors": "عادل امام - سعاد حسني"}, {"id": 837, "cat": "مسلسل", "name": "سوتس بالعربي", "actors": "اسر ياسين - احمد داود"}, {"id": 838, "cat": "فيلم", "name": "صقر و كناريا", "actors": "محمد امام - شيكو"}, {"id": 839, "cat": "اغنية", "name": "نار الغيرة", "actors": "وردة"}, {"id": 840, "cat": "فيلم", "name": "بون سواريه", "actors": "غادة عبدالرازق - مي كساب"}, {"id": 841, "cat": "فيلم", "name": "فاطمة وماريكا وراشيل", "actors": "محمد فوزي - اسماعيل يس"}, {"id": 842, "cat": "فيلم", "name": "الباشا تلميذ", "actors": "كريم عبد العزيز - غادة عادل"}, {"id": 843, "cat": "فيلم", "name": "يوم من عمري", "actors": "عبد الحليم خافظ - زبيدة ثروت"}, {"id": 844, "cat": "فيلم", "name": "حكايتي مع الزمان", "actors": "وردة - رشدي اباظه"}, {"id": 845, "cat": "فيلم", "name": "ولاد العم", "actors": "كريم عبدالعزيز - مني زكي - شريف منير"}, {"id": 846, "cat": "فيلم", "name": "الهلفوت", "actors": "عادل امام - الهام شاهين"}, {"id": 847, "cat": "اغنية", "name": "يا مسافر وحدك", "actors": "محمد عبد الوهاب"}, {"id": 848, "cat": "اغنية", "name": "سو يا سو", "actors": "محمد منير"}, {"id": 849, "cat": "اغنية", "name": "منديل الحلو", "actors": "عبدالعزيز محمود"}, {"id": 850, "cat": "فيلم", "name": "شعبان تحت الصفر", "actors": "عادل امام"}, {"id": 851, "cat": "مسرحية", "name": "شارع محمد علي", "actors": "فريد شوقي - شريهان"}, {"id": 852, "cat": "فيلم", "name": "فاصل و نعود", "actors": "كريم عبدالعزيز - محمد لطفي"}, {"id": 853, "cat": "فيلم", "name": "شد اجزاء", "actors": "محمد رمضان"}, {"id": 854, "cat": "فيلم", "name": "عبود ع  الحدود", "actors": "علاء ولي الدين - غادة عادل"}, {"id": 855, "cat": "مسلسل", "name": "الرجل العناب", "actors": "شيكو- هشام ماجد"}, {"id": 856, "cat": "فيلم", "name": "حماتي ملاك", "actors": "اسماعيل يس - ميمي شكيب"}, {"id": 857, "cat": "اغنية", "name": "أغدا ألقاك", "actors": "ام كلثوم"}, {"id": 858, "cat": "فيلم", "name": "فول الصين العظيم", "actors": "محمد هنيدي"}, {"id": 859, "cat": "مسرحية", "name": "جحا يحكم المدينة", "actors": "سمير غانم - اسعاد يونس"}, {"id": 860, "cat": "فيلم", "name": "عبده مواسم", "actors": "شاندو"}, {"id": 861, "cat": "فيلم", "name": "هيبتا", "actors": "ماجد الكدواني"}, {"id": 862, "cat": "فيلم", "name": "ليلة البيبي دول", "actors": "محمود عبدالعزيز"}, {"id": 863, "cat": "مسلسل", "name": "موضوع عائلي", "actors": "ماجد الكدواني - رنا رئيس"}, {"id": 864, "cat": "مسرحية", "name": "سيدتي الجميلة", "actors": "فؤاد المهندس - شويكار"}, {"id": 865, "cat": "فيلم", "name": "سوق الجمعة", "actors": "عمرو عبد الجليل - سهر الصائغ"}, {"id": 866, "cat": "فيلم", "name": "صاحب الجلالة", "actors": "فريد شوقي - سميرة احمد - فؤاد المهندس"}, {"id": 867, "cat": "فيلم", "name": "حبيبي نائما", "actors": "مي عز الدين - خالد ابو النجا"}, {"id": 868, "cat": "اغنية", "name": "منايا", "actors": "مصطفي قمر"}, {"id": 869, "cat": "فيلم", "name": "زهايمر", "actors": "عادل امام - نيللي كريم"}, {"id": 870, "cat": "مسلسل", "name": "سلسال الدم", "actors": "عبلة كامل"}, {"id": 871, "cat": "مسلسل", "name": "حضرة المتهم ابي", "actors": "نور الشريف - معالي زايد"}, {"id": 872, "cat": "اغنية", "name": "قال جاني بعد يومين", "actors": "سميرة سعيد"}, {"id": 873, "cat": "اغنية", "name": "فاكرك يا ناسيني", "actors": "محمد فؤاد"}, {"id": 874, "cat": "اغنية", "name": "الله عليك يا سيدي", "actors": "ايهاب توفيق"}, {"id": 875, "cat": "فيلم", "name": "نمس بوند", "actors": "هاني رمزي - دوللي شاهين"}, {"id": 876, "cat": "فيلم", "name": "ايس كريم في جليم", "actors": "عمرو دياب - سيمون"}, {"id": 877, "cat": "فيلم", "name": "نظرية عمتي", "actors": ""}, {"id": 878, "cat": "فيلم", "name": "شيء من الخوف", "actors": "شادية - يخيي شاهين"}, {"id": 879, "cat": "فيلم", "name": "روكي الغلابة", "actors": "دنيا سمير غانم - محمد ممدوح"}, {"id": 880, "cat": "فيلم", "name": "تيتة رهيبة", "actors": "محمد هنيدي - ايمي سمير غانم"}, {"id": 881, "cat": "مسلسل", "name": "جت سليمة", "actors": "دنيا سمير غانم - محمد سلام"}, {"id": 882, "cat": "فيلم", "name": "حين ميسرة", "actors": "عمرو سعد - عمرو عبد الجليل"}, {"id": 883, "cat": "فيلم", "name": "اه و اه من شربات", "actors": "رانيا فريد شوقي"}, {"id": 884, "cat": "فيلم", "name": "عفريتة هانم", "actors": "فريد الاطرش - ساميه جمال"}, {"id": 885, "cat": "فيلم", "name": "بخيت و عديلة", "actors": "عادل امام - شيرين"}, {"id": 886, "cat": "اغنية", "name": "سبونج بوب", "actors": "حماده هلال"}, {"id": 887, "cat": "فيلم", "name": "امن دولت", "actors": "حمادة هلال"}, {"id": 888, "cat": "فيلم", "name": "بني ادم", "actors": "يوسف الشريف - هنا الزاهد"}, {"id": 889, "cat": "مسلسل", "name": "ما وراء الطبيعة", "actors": "احمد امين - اية سماحه"}, {"id": 890, "cat": "اغنية", "name": "هو انت مين فكرني بيك", "actors": "حودة بندق"}, {"id": 891, "cat": "فيلم", "name": "مرعي البريمو", "actors": "محمد هنيدي - غاده عادل"}, {"id": 892, "cat": "فيلم", "name": "الشيطان يعظ", "actors": "فريد شوقي - نبيلة عبيد"}, {"id": 893, "cat": "مسلسل", "name": "بنت اسمها ذات", "actors": "نيللي كريم - باسم السمرة"}, {"id": 894, "cat": "مسلسل", "name": "زينب و العرش", "actors": "سهير رمزي - حسن يوسف"}, {"id": 895, "cat": "اغنية", "name": "ايه يا ستو انا", "actors": "اكرم حسني"}, {"id": 896, "cat": "فيلم", "name": "ظرف طارق", "actors": "احمد حلمي - نور"}, {"id": 897, "cat": "اغنية", "name": "قالوا ايه علينا دولا", "actors": "الصاعقه"}, {"id": 898, "cat": "مسرحية", "name": "ريا و سكينة", "actors": "شاية - سهير البابلي"}, {"id": 899, "cat": "مسلسل", "name": "الكابتن جودة", "actors": "سمير غانم - سعاد نصر"}, {"id": 900, "cat": "فيلم", "name": "انا و انت و ساعات السفر", "actors": "عادل امام - يسرا"}, {"id": 901, "cat": "فيلم", "name": "الديزل", "actors": "محمد رمضان - ياسمين صبري"}, {"id": 902, "cat": "فيلم", "name": "الرجل الغامض بسلامته", "actors": "هاني رمزي - نيللي كريم"}, {"id": 903, "cat": "فيلم", "name": "دعاء الكروان", "actors": "فاتن حمامه - احمد مظهر"}, {"id": 904, "cat": "اغنية", "name": "انا مصمم", "actors": "بهاء سلطان"}, {"id": 905, "cat": "فيلم", "name": "امرأة واحدة لا تكفي", "actors": "احمد زكي - يسرا"}, {"id": 906, "cat": "فيلم", "name": "المشروع X", "actors": "كريم عبدالعزيز - ياسمين صبري"}, {"id": 907, "cat": "فيلم", "name": "صد رد", "actors": "علي ربيع - محمد عبدالرحمن"}, {"id": 908, "cat": "مسرحية", "name": "البراشوت", "actors": "سيد زيان"}, {"id": 909, "cat": "فيلم", "name": "مطاردة في الممنوع", "actors": "فاروق الفيشاوي - اثار الحكيم"}, {"id": 910, "cat": "فيلم", "name": "اوشن ١٤", "actors": "حمدي الميرغني - مصطفي خاطر"}, {"id": 911, "cat": "فيلم", "name": "عفريتة اسماعيل يس", "actors": "اسماعيل يس"}, {"id": 912, "cat": "مسلسل", "name": "سره الباتع", "actors": "احمد فهمي - احمد السعدني"}, {"id": 913, "cat": "مسلسل", "name": "نونة المأذونة", "actors": "حنان ترك"}, {"id": 914, "cat": "فيلم", "name": "جيران السعد", "actors": "سامح حسين - ميرنا المهندس"}, {"id": 915, "cat": "فيلم", "name": "تايه في امريكا", "actors": "خالد النبوي"}, {"id": 916, "cat": "اغنية", "name": "كلك علي بعضك حلو", "actors": "كاظم الساهر"}, {"id": 917, "cat": "اغنية", "name": "في يوم في شهر في سنة", "actors": "عبد الحليم حافظ"}, {"id": 918, "cat": "مسلسل", "name": "سكة الهلالي", "actors": "يحيي الفخراني - منة شلبي"}, {"id": 919, "cat": "فيلم", "name": "البلد دي فيها حكومة", "actors": ""}, {"id": 920, "cat": "فيلم", "name": "الاڤوكاتو", "actors": "عادل امام"}, {"id": 921, "cat": "مسرحية", "name": "الهمجي", "actors": "محمد صبحي - سعاد نصر"}, {"id": 922, "cat": "فيلم", "name": "كذلك في الزمالك", "actors": "حسين الامام - بسمة"}, {"id": 923, "cat": "فيلم", "name": "ليلة سقوط بغداد", "actors": "احمد عيد - بسمة"}, {"id": 924, "cat": "اغنية", "name": "ويلوموني", "actors": "عمرو دياب"}, {"id": 925, "cat": "مسرحية", "name": "كده اوكيه", "actors": "مني زكي - احمد السقا"}, {"id": 926, "cat": "مسلسل", "name": "العملية ميسي", "actors": "احمد حلمي - صلاح عبدالله"}, {"id": 927, "cat": "فيلم", "name": "عن العشق والهوى", "actors": "احمد السقا - مني زكي - منة شلبي"}, {"id": 928, "cat": "فيلم", "name": "ديدو", "actors": "كريم فهمي"}, {"id": 929, "cat": "مسلسل", "name": "خطوط حمراء", "actors": "احمد السقا - محمد امام"}, {"id": 930, "cat": "اغنية", "name": "هنساك", "actors": "محمد فؤاد"}, {"id": 931, "cat": "اغنية", "name": "لما يجيبوا سيرتك", "actors": "لطيفة"}, {"id": 932, "cat": "فيلم", "name": "طلق صناعي", "actors": "ماجد الكدواني - حورية فرغلي - سيد رجب"}, {"id": 933, "cat": "فيلم", "name": "كابتن مصر", "actors": "محمد امام - محمد سلام"}, {"id": 934, "cat": "مسرحية", "name": "يوم عاصف جدا", "actors": "مديحة كامل - صلاح قابيل - نجاح الموجي"}, {"id": 935, "cat": "مسلسل", "name": "الليل و اخره", "actors": "يحيي الفخراني - سعاد نصر"}, {"id": 936, "cat": "مسلسل", "name": "لعبة نيوتن", "actors": "مني زكي - محمد ممدوح"}, {"id": 937, "cat": "فيلم", "name": "البعبع", "actors": ""}, {"id": 938, "cat": "اغنية", "name": "من اول لمسة", "actors": "محمد منير"}, {"id": 939, "cat": "اغنية", "name": "قلبي طيارة ورق", "actors": "علاء عبد الخالق"}, {"id": 940, "cat": "فيلم", "name": "رجب فوق صفيح ساخن", "actors": "عادل امام - سعيد صالح"}, {"id": 941, "cat": "مسلسل", "name": "الوسية", "actors": "احمد عبد العزيز"}, {"id": 942, "cat": "اغنية", "name": "انا لو حبيبك", "actors": "محمد فؤاد"}, {"id": 943, "cat": "مسلسل", "name": "ابن النادي", "actors": "احمد فهمي - حاتم صلاح"}, {"id": 944, "cat": "فيلم", "name": "حارة برجوان", "actors": "نبيلة عبيد - يوسف شعبان"}, {"id": 945, "cat": "فيلم", "name": "سيكو سيكو", "actors": "طه الدسوقي - عصام عمر"}, {"id": 946, "cat": "فيلم", "name": "انت اللي قتلت بابايا", "actors": "فؤاد المهندس - شويكار"}, {"id": 947, "cat": "مسلسل", "name": "الا انا", "actors": "كندة علوش - اروي جودة - وفاء عامر"}, {"id": 948, "cat": "فيلم", "name": "علي باب الوزير", "actors": "عادل امام - يسرا"}, {"id": 949, "cat": "فيلم", "name": "مرجان احمد مرجان", "actors": "عادل امام - ميرفت امين"}, {"id": 950, "cat": "فيلم", "name": "شادر السمك", "actors": "احمد زكي - نبيله عبيد"}, {"id": 951, "cat": "اغنية", "name": "عاشقة و مسكينة", "actors": "صباح"}, {"id": 952, "cat": "اغنية", "name": "قنبلة الجيل", "actors": "حسن شاكوش"}, {"id": 953, "cat": "فيلم", "name": "الديكتاتور", "actors": "حسن حسني - خالد سرحان"}, {"id": 954, "cat": "اغنية", "name": "النور مكانه في القلوب", "actors": "مدحت صالح"}, {"id": 955, "cat": "اغنية", "name": "بحبك وحشتيني", "actors": "حسين الجسمي"}, {"id": 956, "cat": "فيلم", "name": "حسن و بقلظ", "actors": "علي ربيع - كريم فهمي"}, {"id": 957, "cat": "مسلسل", "name": "عزمي و اشجان", "actors": "ايمي سمير غانم - حسن الرداد"}, {"id": 958, "cat": "فيلم", "name": "ولا في النية ابقي", "actors": "احمد ادم"}, {"id": 959, "cat": "فيلم", "name": "ابن عز", "actors": "علاء ولي الدين"}, {"id": 960, "cat": "فيلم", "name": "ايامنا الحلوة", "actors": "عبد الحليم حافظ - احمد رمزي"}, {"id": 961, "cat": "فيلم", "name": "سعد اليتيم", "actors": "احمد زكي"}, {"id": 962, "cat": "فيلم", "name": "48 ساعة في اسرائيل", "actors": "نادية الجندي"}, {"id": 963, "cat": "اغنية", "name": "كتير بنعشق", "actors": "شيرين عبدالوهاب"}, {"id": 964, "cat": "اغنية", "name": "زي الملايكة", "actors": "عمرو دياب"}, {"id": 965, "cat": "مسلسل", "name": "علي باب العمارة", "actors": "حاتم صلاح - أية سماحة"}, {"id": 966, "cat": "فيلم", "name": "اسماعيل يس يقابل ريا وسكينة", "actors": "اسماعيل يس"}, {"id": 967, "cat": "فيلم", "name": "الثلاثة يشتغلونها", "actors": "ياسمين عبدالعزيز"}, {"id": 968, "cat": "اغنية", "name": "مش حبيبي بس", "actors": "انغام"}, {"id": 969, "cat": "فيلم", "name": "محمد حسين", "actors": "محمد سعد - مي سليم"}, {"id": 970, "cat": "مسلسل", "name": "رقم مجهول", "actors": ""}, {"id": 971, "cat": "فيلم", "name": "حلاق السيدات", "actors": "عبد السلام النابلسي - اسماعيل يس"}, {"id": 972, "cat": "اغنية", "name": "صافيني مرة", "actors": "عبد الحليم حافظ"}, {"id": 973, "cat": "فيلم", "name": "فص ملح و داخ", "actors": "عمرو عبد الجليل"}, {"id": 974, "cat": "فيلم", "name": "الكاهن", "actors": "احمد عز - احمد فهمي"}, {"id": 975, "cat": "فيلم", "name": "البعض لا يذهب للمأذون مرتين", "actors": "كريم عبد العزيز - دينا الشربيني"}, {"id": 976, "cat": "فيلم", "name": "دائرة الانتقام", "actors": "نور الشريف - ميرفت امين"}, {"id": 977, "cat": "فيلم", "name": "الامبراطور", "actors": "احمد زكي - رغدة"}, {"id": 978, "cat": "فيلم", "name": "فتوة الناس الغلابة", "actors": "فريد شوقي"}, {"id": 979, "cat": "مسلسل", "name": "عتبات البهجة", "actors": "يحيي الفخراني - چومانا مراد"}, {"id": 980, "cat": "فيلم", "name": "سفير جهنم", "actors": "يوسف وهبي"}, {"id": 981, "cat": "فيلم", "name": "جريمة في الاعماق", "actors": "يحيي الفخراني - هالة صدقي"}, {"id": 982, "cat": "اغنية", "name": "يا ليلة العيد", "actors": "ام كلثوم"}, {"id": 983, "cat": "فيلم", "name": "شباب امرأة", "actors": "تحية كاريوكا - شكري سرحان"}, {"id": 984, "cat": "مسلسل", "name": "بيت الرفاعي", "actors": "امير كرارة - احمد رزق"}, {"id": 985, "cat": "فيلم", "name": "حنفي الابهة", "actors": "عادل امام - فاروق الفيشاوي"}, {"id": 986, "cat": "مسلسل", "name": "كابتن انوش", "actors": "بيومي فؤاد"}, {"id": 987, "cat": "فيلم", "name": "الدادة دودي", "actors": "ياسمين عبد العزيز - صلاح عبدالله"}, {"id": 988, "cat": "فيلم", "name": "القرد بيتكلم", "actors": "عمرو واكد - احمد الفيشاوي"}, {"id": 989, "cat": "فيلم", "name": "الكويسين", "actors": "احمد فهمي - بيومي فؤاد"}, {"id": 990, "cat": "اغنية", "name": "ليه بيداري كده", "actors": "روبي"}, {"id": 991, "cat": "مسرحية", "name": "سك علي بناتك", "actors": "فؤاد المهندس - شريهان"}, {"id": 992, "cat": "فيلم", "name": "مسجل خطر", "actors": "عادل امام"}, {"id": 993, "cat": "اغنية", "name": "الليلة دوب", "actors": "مصطفى قمر"}, {"id": 994, "cat": "فيلم", "name": "النمر والانثي", "actors": "عادل امام - اثار الحكيم"}, {"id": 995, "cat": "فيلم", "name": "اللي بالي بالك", "actors": "محمد سعد - حسن حسني"}, {"id": 996, "cat": "اغنية", "name": "حلوين من يومنا والله", "actors": "سيد مكاوي"}, {"id": 997, "cat": "فيلم", "name": "رامي الاعتصامي", "actors": "احمد عيد"}, {"id": 998, "cat": "مسلسل", "name": "الهرشة السابعة", "actors": "محمد شاهين - أمينة خليل"}, {"id": 999, "cat": "فيلم", "name": "شوجر دادي", "actors": "بيومي فؤاد - ليلي علوي"}, {"id": 1000, "cat": "فيلم", "name": "السكرية", "actors": "يحيي شاهين - عبد المنعم ابراهيم"}, {"id": 1001, "cat": "مسلسل", "name": "عمر افندي", "actors": "احمد حاتم - اية سماحة"}, {"id": 1002, "cat": "فيلم", "name": "يوميات نائب في الارياف", "actors": "توفيق الدقن - احمد عبدالحليم"}, {"id": 1003, "cat": "مسلسل", "name": "مولانا العاشق", "actors": "مصطفي شعبان - سارة سلامة"}, {"id": 1004, "cat": "فيلم", "name": "اونكل زيزو حبيبي", "actors": "محمد صبحي - بوسي"}, {"id": 1005, "cat": "مسرحية", "name": "الجميلة و الوحشين", "actors": "ليلي علوي - احمد رزق"}, {"id": 1006, "cat": "اغنية", "name": "خطفوني", "actors": "عمرو دياب"}, {"id": 1007, "cat": "مسلسل", "name": "اتنين غيرنا", "actors": "اسر ياسين - دينا الشربيني"}, {"id": 1008, "cat": "مسلسل", "name": "ليالي الحلمية", "actors": "يحيي الفخراني - صلاح السعدني"}, {"id": 1009, "cat": "فيلم", "name": "ابن حميدو", "actors": "اسماعيل يس - احمد رمزي - هند رستم"}, {"id": 1010, "cat": "مسلسل", "name": "اولاد الراعي", "actors": "ماجد المصري - احمد عيد - خالد الصاوي"}, {"id": 1011, "cat": "فيلم", "name": "الريس عمر حرب", "actors": "هاني سلامه - خالد صالح"}, {"id": 1012, "cat": "فيلم", "name": "انذار بالطاعة", "actors": "ليلي علوي - محمود حميدة"}, {"id": 1013, "cat": "اغنية", "name": "في يوم وليلة", "actors": "وردة"}, {"id": 1014, "cat": "اغنية", "name": "كماننا", "actors": "محمد فؤاد - محمد هنيدي"}, {"id": 1015, "cat": "فيلم", "name": "200 جنيه", "actors": "احمد السعدني - محمود الجندي"}, {"id": 1016, "cat": "مسلسل", "name": "اهل الخطايا", "actors": "جمال سليمان - سوسن بدر - رانيا يوسف"}, {"id": 1017, "cat": "اغنية", "name": "تباعاً تباعاً", "actors": "شيرين عبدالوهاب"}];
+const MAX_ID = Math.max(...ITEMS.map(i => i.id));
+const ITEM_BY_ID = {};
+ITEMS.forEach(i => ITEM_BY_ID[i.id] = i);
+
+document.getElementById('max-hint').textContent = MAX_ID;
+
+const TEAM_COLORS = ['var(--team-a)','var(--team-b)','var(--team-c)','var(--team-d)','#b25a8c','#4f9e8f'];
+
+// ---------------- sound effects (no audio files — synthesized tones) ----------------
+let _actx = null;
+function getAudioCtx(){
+  if(!_actx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    _actx = new AC();
+  }
+  if(_actx.state === 'suspended'){ _actx.resume(); }
+  return _actx;
+}
+
+function playChime(type){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  const notes = type === 'win'
+    ? [523.25, 659.25, 783.99]   // ascending major triad — cheerful
+    : [349.23, 293.66, 220.00];  // descending — flat, deflating
+
+  notes.forEach((freq, i) => {
+    const start = now + i * (type === 'win' ? 0.09 : 0.12);
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type === 'win' ? 'triangle' : 'sawtooth';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(type === 'win' ? 0.22 : 0.16, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + (type === 'win' ? 0.35 : 0.3));
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + 0.4);
+  });
+}
+
+function playTick(secondsLeft){
+  const ctx = getAudioCtx();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'square';
+  // pitch climbs slightly as it gets closer to zero, for urgency
+  osc.frequency.value = 700 + (10 - secondsLeft) * 25;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.15);
+}
+
+// ---------------- state ----------------
+let state = {
+  teamCount: 2,
+  teamNames: ['الفريق الأول', 'الفريق الثاني'],
+  rounds: 3,
+  timerSeconds: 60,
+  scores: [],
+  usedIds: new Set(),
+  deck: [],
+  currentRound: 1,
+  currentTeamIdx: 0,
+  turnOrder: [],       // sequence of team indices, one entry per turn
+  turnPointer: 0,
+  turnScore: 0,
+  timeLeft: 0,
+  timerHandle: null,
+  currentItem: null,
+};
+
+// ---------------- SETUP SCREEN ----------------
+const teamCountRow = document.getElementById('team-count-row');
+const teamNamesWrap = document.getElementById('team-names-wrap');
+
+function renderTeamCountChips(){
+  teamCountRow.innerHTML = '';
+  for(let n=2; n<=6; n++){
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (n === state.teamCount ? ' active' : '');
+    chip.textContent = n;
+    chip.addEventListener('click', () => {
+      state.teamCount = n;
+      while(state.teamNames.length < n){
+        state.teamNames.push('فريق ' + (state.teamNames.length + 1));
+      }
+      state.teamNames = state.teamNames.slice(0, n);
+      renderTeamCountChips();
+      renderTeamNameInputs();
+    });
+    teamCountRow.appendChild(chip);
+  }
+}
+
+function renderTeamNameInputs(){
+  teamNamesWrap.innerHTML = '';
+  for(let i=0; i<state.teamCount; i++){
+    const row = document.createElement('div');
+    row.className = 'team-row';
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.background = TEAM_COLORS[i % TEAM_COLORS.length];
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = state.teamNames[i];
+    input.placeholder = 'اسم الفريق ' + (i+1);
+    input.addEventListener('input', (e) => { state.teamNames[i] = e.target.value; });
+    row.appendChild(dot);
+    row.appendChild(input);
+    teamNamesWrap.appendChild(row);
+  }
+}
+
+document.getElementById('rounds-minus').addEventListener('click', () => {
+  state.rounds = Math.max(1, state.rounds - 1);
+  document.getElementById('rounds-val').textContent = state.rounds;
+});
+document.getElementById('rounds-plus').addEventListener('click', () => {
+  state.rounds = Math.min(20, state.rounds + 1);
+  document.getElementById('rounds-val').textContent = state.rounds;
+});
+document.getElementById('timer-minus').addEventListener('click', () => {
+  state.timerSeconds = Math.max(10, state.timerSeconds - 10);
+  document.getElementById('timer-val').textContent = state.timerSeconds;
+});
+document.getElementById('timer-plus').addEventListener('click', () => {
+  state.timerSeconds = Math.min(180, state.timerSeconds + 10);
+  document.getElementById('timer-val').textContent = state.timerSeconds;
+});
+
+renderTeamCountChips();
+renderTeamNameInputs();
+
+function showScreen(id){
+  ['screen-setup','screen-intro','screen-play','screen-timeup','screen-results','screen-extend'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+  const sticky = document.getElementById('sticky-score');
+  if(id === 'screen-setup'){
+    sticky.classList.add('hidden');
+  } else {
+    sticky.classList.remove('hidden');
+    renderStickyScore();
+  }
+}
+
+function renderScoreStrip(el){
+  el.innerHTML = '';
+  state.teamNames.forEach((name, idx) => {
+    const pill = document.createElement('div');
+    pill.className = 'score-pill';
+    pill.style.borderColor = TEAM_COLORS[idx % TEAM_COLORS.length];
+    pill.textContent = name + ': ' + state.scores[idx];
+    el.appendChild(pill);
+  });
+}
+
+function renderStickyScore(){
+  const el = document.getElementById('sticky-score');
+  if(!el) return;
+  el.innerHTML = '';
+  state.teamNames.forEach((name, idx) => {
+    const pill = document.createElement('div');
+    pill.className = 'pill' + (idx === state.currentTeamIdx ? ' active' : '');
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.background = TEAM_COLORS[idx % TEAM_COLORS.length];
+    const label = document.createElement('span');
+    label.textContent = name;
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.textContent = state.scores[idx] !== undefined ? state.scores[idx] : 0;
+    pill.appendChild(dot);
+    pill.appendChild(label);
+    pill.appendChild(num);
+    el.appendChild(pill);
+  });
+}
+
+document.getElementById('start-game-btn').addEventListener('click', () => {
+  getAudioCtx(); // unlock audio early on a clear user gesture
+  const err = document.getElementById('setup-error');
+  const names = state.teamNames.map(n => (n || '').trim());
+  if(names.some(n => n.length === 0)){
+    err.textContent = 'من فضلك اكتب اسم لكل فريق.';
+    return;
+  }
+  err.textContent = '';
+  state.scores = new Array(state.teamCount).fill(0);
+  state.usedIds = new Set();
+  state.deck = buildShuffledDeck();
+  state.currentRound = 1;
+  state.turnOrder = [];
+  for(let r=0; r<state.rounds; r++){
+    for(let t=0; t<state.teamCount; t++){
+      state.turnOrder.push(t);
+    }
+  }
+  state.turnPointer = 0;
+  startTurnIntro();
+});
+
+// ---------------- TURN INTRO ----------------
+function startTurnIntro(){
+  if(state.turnPointer >= state.turnOrder.length){
+    showResults();
+    return;
+  }
+  const teamIdx = state.turnOrder[state.turnPointer];
+  state.currentTeamIdx = teamIdx;
+  state.currentRound = Math.floor(state.turnPointer / state.teamCount) + 1;
+
+  document.getElementById('intro-round-num').textContent = state.currentRound;
+  document.getElementById('intro-round-total').textContent = state.rounds;
+  document.getElementById('intro-team-name').textContent = state.teamNames[teamIdx];
+  document.getElementById('intro-team-name').style.color = TEAM_COLORS[teamIdx % TEAM_COLORS.length];
+  renderScoreStrip(document.getElementById('intro-scores'));
+  showScreen('screen-intro');
+}
+
+document.getElementById('begin-turn-btn').addEventListener('click', () => {
+  beginPlay();
+});
+
+// ---------------- PLAY ----------------
+const ringFg = document.getElementById('ring-fg');
+const RING_CIRC = 2 * Math.PI * 52;
+ringFg.style.strokeDasharray = RING_CIRC;
+
+function beginPlay(){
+  state.timeLeft = state.timerSeconds;
+  state.currentItem = null;
+
+  document.getElementById('play-round-num').textContent = state.currentRound;
+  document.getElementById('play-team-name').textContent = state.teamNames[state.currentTeamIdx];
+  document.getElementById('play-team-name').style.color = TEAM_COLORS[state.currentTeamIdx % TEAM_COLORS.length];
+
+  // back to pick phase: nothing revealed yet, timer hidden
+  document.getElementById('random-num-btn').disabled = false;
+  document.getElementById('pick-phase').classList.remove('hidden');
+  document.getElementById('ticket-area').innerHTML = '<div class="ticket placeholder-ticket" id="ticket-placeholder">دوس "اختار عنصر عشوائي" 🎟️</div>';
+
+  document.getElementById('ring-block').classList.add('hidden');
+  document.getElementById('start-timer-btn').classList.remove('hidden');
+  document.getElementById('answer-buttons').classList.add('hidden');
+
+  clearInterval(state.timerHandle);
+  renderScoreStrip(document.getElementById('play-scores'));
+  updateRing();
+  showScreen('screen-play');
+}
+
+function startTimerNow(){
+  document.getElementById('start-timer-btn').classList.add('hidden');
+  document.getElementById('answer-buttons').classList.remove('hidden');
+
+  clearInterval(state.timerHandle);
+  state.timerHandle = setInterval(() => {
+    state.timeLeft -= 1;
+    updateRing();
+    if(state.timeLeft > 0 && state.timeLeft <= 10){
+      playTick(state.timeLeft);
+    }
+    if(state.timeLeft <= 0){
+      clearInterval(state.timerHandle);
+      playChime('lose');
+      endTurn('timeout');
+    }
+  }, 1000);
+}
+
+document.getElementById('start-timer-btn').addEventListener('click', startTimerNow);
+
+function updateRing(){
+  const pct = Math.max(0, state.timeLeft / state.timerSeconds);
+  ringFg.style.strokeDashoffset = RING_CIRC * (1 - pct);
+  document.getElementById('ring-num').textContent = Math.max(0, state.timeLeft);
+  ringFg.style.stroke = pct < 0.2 ? 'var(--bad)' : (pct < 0.5 ? 'var(--gold-bright)' : 'var(--ok-bright)');
+}
+
+function secureRandomInt(maxExclusive){
+  // higher-quality randomness than Math.random when available, with unbiased rejection sampling
+  if(window.crypto && window.crypto.getRandomValues){
+    const arr = new Uint32Array(1);
+    const limit = Math.floor(0xFFFFFFFF / maxExclusive) * maxExclusive;
+    let x;
+    do { window.crypto.getRandomValues(arr); x = arr[0]; } while(x >= limit);
+    return x % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+function buildShuffledDeck(){
+  // Fisher-Yates shuffle of every item id — guarantees the whole 1-1017 range
+  // gets covered evenly as the deck is dealt, instead of relying on repeated
+  // independent random picks (which can land in a narrow area purely by chance).
+  const ids = ITEMS.map(i => i.id);
+  for(let i = ids.length - 1; i > 0; i--){
+    const j = secureRandomInt(i + 1);
+    const tmp = ids[i]; ids[i] = ids[j]; ids[j] = tmp;
+  }
+  return ids;
+}
+
+function pickRandomUnused(){
+  while(state.deck.length){
+    const id = state.deck.shift();
+    if(!state.usedIds.has(id)) return ITEM_BY_ID[id];
+  }
+  return null;
+}
+
+function revealItem(item){
+  state.currentItem = item;
+  state.usedIds.add(item.id);
+  const area = document.getElementById('ticket-area');
+  area.innerHTML = '';
+  const ticket = document.createElement('div');
+  ticket.className = 'ticket fade-in';
+  ticket.innerHTML =
+    '<div class="item-id">#' + item.id + '</div>' +
+    '<div class="cat">' + item.cat + '</div>' +
+    '<div class="name">' + item.name + '</div>' +
+    (item.actors ? '<div class="actors">' + item.actors + '</div>' : '');
+  area.appendChild(ticket);
+
+  // locked in for this turn — one film only
+  document.getElementById('random-num-btn').disabled = true;
+  document.getElementById('pick-phase').classList.add('hidden');
+
+  document.getElementById('ring-block').classList.remove('hidden');
+  document.getElementById('start-timer-btn').classList.remove('hidden');
+  document.getElementById('answer-buttons').classList.add('hidden');
+  state.timeLeft = state.timerSeconds;
+  updateRing();
+}
+
+document.getElementById('random-num-btn').addEventListener('click', () => {
+  const item = pickRandomUnused();
+  if(!item){
+    document.getElementById('ticket-area').innerHTML = '<div class="ticket placeholder-ticket">خلصت كل العناصر! 🎬</div>';
+    return;
+  }
+  revealItem(item);
+});
+
+document.getElementById('correct-btn').addEventListener('click', () => {
+  if(!state.currentItem) return;
+  clearInterval(state.timerHandle);
+  state.scores[state.currentTeamIdx] += 1;
+  playChime('win');
+  endTurn('correct');
+});
+
+document.getElementById('wrong-btn').addEventListener('click', () => {
+  if(!state.currentItem) return;
+  clearInterval(state.timerHandle);
+  playChime('lose');
+  endTurn('wrong');
+});
+
+function endTurn(reason){
+  const teamName = state.teamNames[state.currentTeamIdx];
+  if(reason === 'correct'){
+    document.getElementById('timeup-emoji').textContent = '🎉';
+    document.getElementById('timeup-headline').textContent = 'صح!';
+    document.getElementById('timeup-line').innerHTML = 'فريق <b>' + teamName + '</b> جاب نقطة! 🎬';
+  } else if(reason === 'wrong'){
+    document.getElementById('timeup-emoji').textContent = '❌';
+    document.getElementById('timeup-headline').textContent = 'غلط!';
+    document.getElementById('timeup-line').innerHTML = 'مفيش نقطة لفريق <b>' + teamName + '</b> في الدور ده.';
+  } else {
+    document.getElementById('timeup-emoji').textContent = '⏱️';
+    document.getElementById('timeup-headline').textContent = 'خلص الوقت!';
+    document.getElementById('timeup-line').innerHTML = 'الوقت خلص قبل ما فريق <b>' + teamName + '</b> ياخد نقطة.';
+  }
+  renderScoreStrip(document.getElementById('timeup-scores'));
+  showScreen('screen-timeup');
+}
+
+document.getElementById('next-turn-btn').addEventListener('click', () => {
+  state.turnPointer += 1;
+  startTurnIntro();
+});
+
+// ---------------- RESULTS ----------------
+function showResults(){
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  const ranked = state.teamNames.map((name, idx) => ({ name, score: state.scores[idx], idx }))
+    .sort((a,b) => b.score - a.score);
+
+  const top = ranked[0].score;
+  const winners = ranked.filter(r => r.score === top);
+  document.getElementById('winner-line').innerHTML = winners.length > 1
+    ? 'تعادل بين ' + winners.map(w => '<b>' + w.name + '</b>').join(' و ') + ' بـ ' + top + ' نقطة! 🎉'
+    : 'مبروك لفريق <b>' + winners[0].name + '</b>! 🎉';
+
+  ranked.forEach((r, i) => {
+    const row = document.createElement('div');
+    row.className = 'podium-row' + (i === 0 ? ' first' : '');
+    row.innerHTML =
+      '<div class="podium-rank">' + (i+1) + '</div>' +
+      '<div class="podium-name" style="color:' + TEAM_COLORS[r.idx % TEAM_COLORS.length] + '">' + r.name + '</div>' +
+      '<div class="podium-score">' + r.score + '</div>';
+    podium.appendChild(row);
+  });
+
+  showScreen('screen-results');
+}
+
+document.getElementById('restart-btn').addEventListener('click', () => {
+  showScreen('screen-setup');
+});
+
+// ---------------- CONTINUE WITH SAME SCORE (extra rounds, no reset) ----------------
+if(state.extendRounds === undefined) state.extendRounds = 3;
+
+document.getElementById('continue-btn').addEventListener('click', () => {
+  document.getElementById('extend-val').textContent = state.extendRounds;
+  showScreen('screen-extend');
+});
+
+document.getElementById('extend-minus').addEventListener('click', () => {
+  state.extendRounds = Math.max(1, state.extendRounds - 1);
+  document.getElementById('extend-val').textContent = state.extendRounds;
+});
+document.getElementById('extend-plus').addEventListener('click', () => {
+  state.extendRounds = Math.min(20, state.extendRounds + 1);
+  document.getElementById('extend-val').textContent = state.extendRounds;
+});
+
+document.getElementById('cancel-extend-btn').addEventListener('click', () => {
+  showScreen('screen-results');
+});
+
+document.getElementById('confirm-extend-btn').addEventListener('click', () => {
+  // scores, team names, timer and usedIds all stay exactly as they are —
+  // we just queue up more turns after the ones already played.
+  for(let r = 0; r < state.extendRounds; r++){
+    for(let t = 0; t < state.teamCount; t++){
+      state.turnOrder.push(t);
+    }
+  }
+  state.rounds += state.extendRounds;
+  startTurnIntro();
+});
+
+</script>
+</body>
+</html>
